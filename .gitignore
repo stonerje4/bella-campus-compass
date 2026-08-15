@@ -3,3 +3,4 @@ Screenshot*.png
 IMG_*.png
 sample context.txt
 *.txt
+!robots.txt
