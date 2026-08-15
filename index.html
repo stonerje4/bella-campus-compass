@@ -209,7 +209,7 @@
 </div>
 
 <!-- map screen widgets -->
-<button id="wherePill">🔍 &nbsp;where we going bestie?</button>
+<button id="wherePill">🔍 &nbsp;where we going baby girl?</button>
 <div id="statsBar">
   <div class="stat"><div class="big" id="distVal">–</div><div class="lbl">to go</div></div>
   <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
@@ -270,8 +270,8 @@
 <!-- first-open welcome -->
 <div id="welcome">
   <div class="wolf">🐺</div>
-  <h1>hiii bella 👋</h1>
-  <p>ur personal "where tf am i going" app.<br>tap below &amp; hit <b>Allow</b> so i can find u —<br>then just follow the arrow 💅</p>
+  <h1>hey baby girl 💕</h1>
+  <p>so u never get lost at State.<br>tap below &amp; hit <b>Allow</b> so i can find u —<br>then just follow the arrow ❤️</p>
   <button id="startBtn">let's gooo 🚀</button>
 </div>
 
@@ -498,7 +498,7 @@ function renderClasses(day){
   $('dayLabel').textContent = (day===today?'today — ':'') + DAYNAMES[day];
   const list=$('classList'); list.innerHTML='';
   const classes=SCHEDULE[day]||[];
-  if(!classes.length){ list.innerHTML='<div class="noclass">no classes — slay 😌</div>'; return; }
+  if(!classes.length){ list.innerHTML='<div class="noclass">no classes today baby girl 😌💕</div>'; return; }
   const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes();
   const isToday=day===today; let nextFlagged=false;
   classes.forEach(cl=>{
@@ -555,7 +555,7 @@ function onPosition(pos){
     myMarker=L.marker(myPos,{ icon:L.divIcon({className:'', html:'<div class="my-dot"></div>', iconSize:[18,18], iconAnchor:[9,9]}), zIndexOffset:1000 }).addTo(map);
     accCircle=L.circle(myPos,{ radius:pos.coords.accuracy, color:'#1a73e8', weight:1, fillOpacity:.08 }).addTo(map);
     map.setView(myPos,17);
-    toast('found u! 🫵🐺');
+    toast('found u baby girl 💕');
     renderClasses(shownDay);
     renderList($('searchBox').value);
   } else {
@@ -637,7 +637,7 @@ function updateCompassScreen(){
     $('compassHeadline').textContent = `➡️ ${dest.name}`;
     $('compassSub').textContent = h===null
       ? 'arrow = map direction (turn compass on for real-time 🧭)'
-      : 'just walk where the red arrow points 💅';
+      : 'just walk where the red arrow points, u got this 💕';
   } else {
     $('destArrow').classList.remove('on');
     $('compassDist').classList.remove('on');
@@ -750,7 +750,7 @@ function updateProgress(){
 
   if(remainingDist<18 || haversine(myPos,[dest.lat,dest.lng])<18){
     $('instr').textContent="u made it!! 🎉🐺";
-    $('instrSub').textContent='so proud of u 💛';
+    $('instrSub').textContent='so proud of u baby girl 💕';
     if(currentScreen==='compass') updateCompassScreen();
     return;
   }
