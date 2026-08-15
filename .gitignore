@@ -1,6 +1,9 @@
 # personal files — never publish these
 Screenshot*.png
 IMG_*.png
+IMG_*.jpeg
+IMG_*.jpg
+/hf_*.mp4
 sample context.txt
 *.txt
 !robots.txt
