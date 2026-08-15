@@ -11,155 +11,193 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-  html, body { height:100%; overflow:hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overscroll-behavior:none; }
-  #map { position:absolute; inset:0; z-index:1; }
+  html, body { height:100%; overflow:hidden; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overscroll-behavior:none; background:#111; }
+  button { font-family:inherit; cursor:pointer; }
+  #map { position:absolute; inset:0; bottom:var(--nav-h); z-index:1; }
+  :root { --nav-h: calc(58px + env(safe-area-inset-bottom)); --red:#CC0000; }
 
-  /* ---------- top instruction banner ---------- */
+  /* ============ top instruction banner ============ */
   #banner {
-    position:absolute; top:0; left:0; right:0; z-index:1000;
-    background:#CC0000; color:#fff;
+    position:absolute; top:0; left:0; right:0; z-index:1200;
+    background:var(--red); color:#fff;
     padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
     display:none; align-items:center; gap:12px;
     box-shadow:0 2px 10px rgba(0,0,0,.35);
   }
   #banner.on { display:flex; }
-  #arrowWrap {
-    width:52px; height:52px; flex:0 0 52px; border-radius:50%;
-    background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center;
-  }
+  #arrowWrap { width:52px; height:52px; flex:0 0 52px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; }
   #arrow { width:34px; height:34px; transition:transform .3s ease; }
-  #instr { font-size:17px; font-weight:700; line-height:1.25; }
-  #instrSub { font-size:13px; font-weight:400; opacity:.9; margin-top:2px; }
+  #instr { font-size:17px; font-weight:800; line-height:1.25; }
+  #instrSub { font-size:13px; font-weight:500; opacity:.9; margin-top:2px; }
+  #saveBtn { display:none; background:#fff; color:var(--red); border:none; border-radius:10px; font-size:13px; font-weight:800; padding:8px 12px; margin-left:auto; flex:0 0 auto; }
+  #saveBtn.on { display:block; }
 
-  /* ---------- bottom sheet ---------- */
-  #sheet {
-    position:absolute; left:0; right:0; bottom:0; z-index:1000;
-    background:#fff; border-radius:18px 18px 0 0;
-    box-shadow:0 -4px 20px rgba(0,0,0,.25);
-    padding:10px 14px calc(14px + env(safe-area-inset-bottom));
-    max-height:62%; display:flex; flex-direction:column;
-    transition:max-height .25s ease;
+  /* ============ bottom nav (insta-style) ============ */
+  #nav {
+    position:absolute; left:0; right:0; bottom:0; height:var(--nav-h); z-index:1500;
+    background:#fff; border-top:1px solid #eee; display:flex;
+    padding-bottom:env(safe-area-inset-bottom);
   }
-  #sheet.mini { max-height:150px; }
-  #grab { width:42px; height:5px; border-radius:3px; background:#ddd; margin:0 auto 10px; flex:0 0 auto; }
-  #statsRow { display:none; align-items:center; justify-content:space-between; margin-bottom:10px; flex:0 0 auto; }
-  #statsRow.on { display:flex; }
+  .navItem {
+    flex:1; border:none; background:none; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px; color:#999;
+  }
+  .navItem .ic { font-size:24px; line-height:1; filter:grayscale(1) opacity(.55); }
+  .navItem .lb { font-size:10px; font-weight:800; letter-spacing:.3px; }
+  .navItem.on { color:var(--red); }
+  .navItem.on .ic { filter:none; }
+
+  /* ============ map screen widgets ============ */
+  #wherePill {
+    position:absolute; left:14px; right:14px; bottom:calc(var(--nav-h) + 14px); z-index:1100;
+    background:#fff; border:none; border-radius:26px; padding:15px 20px;
+    font-size:16px; font-weight:700; color:#888; text-align:left;
+    box-shadow:0 4px 16px rgba(0,0,0,.25);
+  }
+  #statsBar {
+    display:none; position:absolute; left:14px; right:14px; bottom:calc(var(--nav-h) + 14px); z-index:1100;
+    background:#fff; border-radius:18px; padding:12px 16px;
+    box-shadow:0 4px 16px rgba(0,0,0,.25);
+    align-items:center; justify-content:space-between;
+  }
+  #statsBar.on { display:flex; }
   .stat { text-align:center; flex:1; }
-  .stat .big { font-size:22px; font-weight:800; color:#111; }
-  .stat .lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.5px; }
-  #endBtn {
-    background:#eee; color:#CC0000; border:none; border-radius:12px;
-    font-size:14px; font-weight:700; padding:10px 14px;
-  }
-
-  /* tabs */
-  #tabs { display:flex; gap:8px; margin-bottom:10px; flex:0 0 auto; }
-  .tab {
-    flex:1; padding:11px 0; border:none; border-radius:12px;
-    font-size:15px; font-weight:800; background:#f1f1f1; color:#666;
-  }
-  .tab.on { background:#CC0000; color:#fff; }
-
-  #panelScroll { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
-
-  /* hungry button */
-  #hungryBtn {
-    width:100%; padding:14px; border:none; border-radius:14px;
-    background:linear-gradient(135deg,#ff6b35,#e8221a); color:#fff;
-    font-size:16px; font-weight:900; letter-spacing:.5px;
-    margin-bottom:10px; flex:0 0 auto;
-    box-shadow:0 3px 10px rgba(232,34,26,.35);
-  }
-  #hungryBtn:active { transform:scale(.98); }
-
-  /* schedule panel */
-  #homeBtn {
-    width:100%; padding:13px; border:none; border-radius:12px;
-    background:#fff3f3; color:#CC0000; font-size:15px; font-weight:800;
-    margin-bottom:10px; border:1.5px solid #f5caca;
-  }
-  #daySel {
-    width:100%; padding:12px 14px; font-size:16px; font-weight:700;
-    border:2px solid #eee; border-radius:12px; background:#f7f7f7 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23888' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;
-    -webkit-appearance:none; appearance:none; color:#222; margin-bottom:8px;
-  }
-  .cls {
-    display:flex; align-items:center; gap:10px;
-    padding:12px 8px; border-bottom:1px solid #f2f2f2;
-  }
-  .cls .time { font-size:14px; font-weight:800; color:#CC0000; width:64px; flex:0 0 64px; }
-  .cls .course { font-size:15px; font-weight:700; color:#222; }
-  .cls .where { font-size:13px; color:#888; }
-  .cls .go {
-    margin-left:auto; flex:0 0 auto; border:none; border-radius:10px;
-    background:#CC0000; color:#fff; font-size:14px; font-weight:800; padding:10px 16px;
-  }
-  .badge {
-    font-size:10px; font-weight:900; color:#fff; background:#1a9c4b;
-    border-radius:6px; padding:2px 6px; margin-left:6px; vertical-align:2px;
-  }
-  .noclass { text-align:center; color:#999; padding:24px 0 12px; font-size:15px; }
-
-  /* places panel */
-  #searchBox {
-    width:100%; padding:12px 14px; font-size:16px;
-    border:2px solid #eee; border-radius:12px; outline:none; background:#f7f7f7; margin-bottom:8px;
-  }
-  #searchBox:focus { border-color:#CC0000; background:#fff; }
-  #chips { display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px; flex:0 0 auto; scrollbar-width:none; }
-  #chips::-webkit-scrollbar { display:none; }
-  .chip {
-    flex:0 0 auto; border:none; border-radius:20px; padding:8px 14px;
-    font-size:13px; font-weight:700; background:#f1f1f1; color:#555; white-space:nowrap;
-  }
-  .chip.on { background:#CC0000; color:#fff; }
-  .place {
-    display:flex; align-items:center; gap:10px;
-    padding:11px 6px; border-bottom:1px solid #f2f2f2; cursor:pointer;
-  }
-  .place:active { background:#faf0f0; }
-  .place .emoji { font-size:22px; width:30px; text-align:center; flex:0 0 30px; }
-  .place .nm { font-size:15px; font-weight:600; color:#222; }
-  .place .cat { font-size:12px; color:#999; }
-
+  .stat .big { font-size:20px; font-weight:900; color:#111; }
+  .stat .lbl { font-size:10px; color:#999; text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
+  #endBtn { background:#fdecec; color:var(--red); border:none; border-radius:12px; font-size:14px; font-weight:800; padding:12px 16px; }
   #locBtn {
-    position:absolute; right:12px; z-index:1000; bottom:calc(63% + 16px);
-    width:52px; height:52px; border-radius:50%; border:none;
-    background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3);
-    font-size:24px; display:flex; align-items:center; justify-content:center;
-  }
-  #compassBtn {
-    display:none; position:absolute; right:12px; z-index:1000; bottom:calc(63% + 80px);
+    position:absolute; right:14px; bottom:calc(var(--nav-h) + 84px); z-index:1100;
     width:52px; height:52px; border-radius:50%; border:none;
     background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3); font-size:24px;
   }
   #toast {
-    position:absolute; top:calc(70px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:2000;
-    background:rgba(0,0,0,.8); color:#fff; padding:10px 18px; border-radius:20px;
-    font-size:14px; display:none; max-width:85%; text-align:center;
+    position:absolute; top:calc(70px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:3000;
+    background:rgba(0,0,0,.85); color:#fff; padding:11px 18px; border-radius:22px;
+    font-size:14px; font-weight:600; display:none; max-width:85%; text-align:center;
   }
+  .my-dot { width:18px; height:18px; border-radius:50%; background:#1a73e8; border:3px solid #fff; box-shadow:0 0 0 2px rgba(26,115,232,.4), 0 1px 4px rgba(0,0,0,.4); }
+
+  /* ============ where-to sheet ============ */
+  #whereSheet {
+    position:absolute; left:0; right:0; bottom:0; top:22%; z-index:1400;
+    background:#fff; border-radius:20px 20px 0 0;
+    box-shadow:0 -4px 24px rgba(0,0,0,.3);
+    padding:10px 14px calc(14px + env(safe-area-inset-bottom));
+    display:none; flex-direction:column;
+  }
+  #whereSheet.on { display:flex; }
+  #grab { width:42px; height:5px; border-radius:3px; background:#ddd; margin:0 auto 10px; flex:0 0 auto; }
+  #searchBox {
+    width:100%; padding:13px 16px; font-size:16px;
+    border:2px solid #eee; border-radius:14px; outline:none; background:#f7f7f7; margin-bottom:8px; flex:0 0 auto;
+  }
+  #searchBox:focus { border-color:var(--red); background:#fff; }
+  #chips { display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px; flex:0 0 auto; scrollbar-width:none; }
+  #chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; border:none; border-radius:20px; padding:9px 15px; font-size:13px; font-weight:800; background:#f1f1f1; color:#555; white-space:nowrap; }
+  .chip.on { background:var(--red); color:#fff; }
+  #placeList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
+  .place { display:flex; align-items:center; gap:10px; padding:12px 6px; border-bottom:1px solid #f2f2f2; }
+  .place:active { background:#faf0f0; }
+  .place .emoji { font-size:22px; width:30px; text-align:center; flex:0 0 30px; }
+  .place .nm { font-size:15px; font-weight:700; color:#222; }
+  .place .cat { font-size:12px; color:#999; }
   #hint { font-size:12px; color:#aaa; text-align:center; padding-top:8px; flex:0 0 auto; }
-  .my-dot {
-    width:18px; height:18px; border-radius:50%;
-    background:#1a73e8; border:3px solid #fff;
-    box-shadow:0 0 0 2px rgba(26,115,232,.4), 0 1px 4px rgba(0,0,0,.4);
+
+  /* ============ full screens (classes / compass) ============ */
+  .screen {
+    position:absolute; inset:0; bottom:var(--nav-h); z-index:1300;
+    display:none; flex-direction:column; overflow:hidden;
   }
-  #saveBtn {
-    display:none; background:#fff; color:#CC0000; border:none; border-radius:10px;
-    font-size:13px; font-weight:800; padding:8px 12px; margin-left:auto; flex:0 0 auto;
+  .screen.on { display:flex; }
+  #screenClasses { background:#fff; padding:calc(16px + env(safe-area-inset-top)) 16px 12px; }
+  .scrTitle { font-size:26px; font-weight:900; color:#111; margin-bottom:12px; flex:0 0 auto; }
+  #homeBtn {
+    width:100%; padding:14px; border:none; border-radius:14px;
+    background:#fff3f3; color:var(--red); font-size:15px; font-weight:900;
+    margin-bottom:10px; border:1.5px solid #f5caca; flex:0 0 auto;
   }
-  #saveBtn.on { display:block; }
+  #hungryBtn {
+    width:100%; padding:14px; border:none; border-radius:14px;
+    background:linear-gradient(135deg,#ff6b35,#e8221a); color:#fff;
+    font-size:16px; font-weight:900; letter-spacing:.5px; margin-bottom:12px; flex:0 0 auto;
+    box-shadow:0 3px 10px rgba(232,34,26,.35);
+  }
+  #dayPills { display:flex; gap:6px; margin-bottom:6px; flex:0 0 auto; }
+  .dayPill {
+    flex:1; padding:11px 0; border:none; border-radius:12px;
+    font-size:14px; font-weight:900; background:#f1f1f1; color:#777;
+  }
+  .dayPill.on { background:var(--red); color:#fff; }
+  .dayPill.today:not(.on) { color:var(--red); }
+  #dayLabel { font-size:13px; font-weight:700; color:#aaa; margin:2px 0 4px; flex:0 0 auto; }
+  #classList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
+  .cls {
+    display:flex; align-items:center; gap:10px;
+    padding:14px 10px; border:1.5px solid #f0f0f0; border-radius:16px; margin-bottom:8px;
+  }
+  .cls.next { border-color:var(--red); background:#fffafa; }
+  .cls .time { font-size:14px; font-weight:900; color:var(--red); width:66px; flex:0 0 66px; }
+  .cls .course { font-size:16px; font-weight:800; color:#222; }
+  .cls .where { font-size:13px; color:#888; margin-top:1px; }
+  .cls .go { margin-left:auto; flex:0 0 auto; border:none; border-radius:12px; background:var(--red); color:#fff; font-size:14px; font-weight:900; padding:12px 18px; }
+  .badge { font-size:10px; font-weight:900; color:#fff; background:#1a9c4b; border-radius:6px; padding:2px 6px; margin-left:6px; vertical-align:2px; }
+  .noclass { text-align:center; color:#999; padding:30px 0; font-size:16px; font-weight:600; }
+
+  /* ============ compass screen ============ */
+  #screenCompass {
+    background:radial-gradient(circle at 50% 30%, #2a2a2e 0%, #111 70%);
+    align-items:center; justify-content:center; color:#fff; text-align:center;
+    padding:calc(20px + env(safe-area-inset-top)) 20px 20px;
+  }
+  #roseBox { position:relative; width:min(78vw, 340px); height:min(78vw, 340px); flex:0 0 auto; }
+  #rose { position:absolute; inset:0; transition:transform .18s linear; will-change:transform; }
+  #destArrow {
+    position:absolute; inset:18%; transition:transform .18s linear; will-change:transform;
+    display:none; align-items:center; justify-content:center;
+  }
+  #destArrow.on { display:flex; }
+  #facingNotch {
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent;
+    border-top:16px solid #ffd60a;
+  }
+  #compassHeadline { font-size:24px; font-weight:900; margin-top:22px; }
+  #compassSub { font-size:15px; color:#bbb; margin-top:6px; font-weight:600; line-height:1.4; }
+  #compassDist { font-size:42px; font-weight:900; margin-top:8px; display:none; }
+  #compassDist.on { display:block; }
+  #enableCompassBtn {
+    display:none; margin-top:20px; padding:14px 26px; border:none; border-radius:26px;
+    background:#ffd60a; color:#111; font-size:16px; font-weight:900;
+  }
+  #enableCompassBtn.on { display:block; }
+
+  /* ============ onboarding ============ */
+  #welcome {
+    position:absolute; inset:0; z-index:5000;
+    background:linear-gradient(160deg, #CC0000 0%, #7d0000 60%, #3d0000 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; text-align:center; padding:30px;
+  }
+  #welcome.off { display:none; }
+  #welcome .wolf { font-size:70px; margin-bottom:14px; }
+  #welcome h1 { font-size:32px; font-weight:900; margin-bottom:10px; }
+  #welcome p { font-size:16px; opacity:.92; line-height:1.5; margin-bottom:30px; font-weight:600; }
+  #startBtn {
+    background:#fff; color:var(--red); border:none; border-radius:30px;
+    font-size:19px; font-weight:900; padding:17px 44px;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+  }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 
+<!-- turn-by-turn banner -->
 <div id="banner">
   <div id="arrowWrap">
-    <svg id="arrow" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#fff"/>
-    </svg>
+    <svg id="arrow" viewBox="0 0 24 24" fill="none"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#fff"/></svg>
   </div>
   <div>
     <div id="instr">Getting directions…</div>
@@ -168,65 +206,92 @@
   <button id="saveBtn">＋ Save spot</button>
 </div>
 
+<!-- map screen widgets -->
+<button id="wherePill">🔍 &nbsp;where we going bestie?</button>
+<div id="statsBar">
+  <div class="stat"><div class="big" id="distVal">–</div><div class="lbl">to go</div></div>
+  <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
+  <button id="endBtn">End</button>
+</div>
 <button id="locBtn" title="Find me">📍</button>
-<button id="compassBtn" title="Enable compass">🧭</button>
 <div id="toast"></div>
 
-<div id="sheet">
+<!-- where-to sheet -->
+<div id="whereSheet">
   <div id="grab"></div>
-  <div id="statsRow">
-    <div class="stat"><div class="big" id="distVal">–</div><div class="lbl">to go</div></div>
-    <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
-    <button id="endBtn">End</button>
-  </div>
+  <input id="searchBox" type="text" placeholder="search anywhere on campus…" autocomplete="off">
+  <div id="chips"></div>
+  <div id="placeList"></div>
+  <div id="hint">tip: press &amp; hold anywhere on the map to go there</div>
+</div>
 
-  <div id="tabs">
-    <button class="tab on" id="tabSched">📅 My Classes</button>
-    <button class="tab" id="tabPlaces">🗺️ Campus</button>
-  </div>
-
+<!-- classes screen -->
+<div class="screen" id="screenClasses">
+  <div class="scrTitle">ur week 📅</div>
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
+  <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
+  <div id="dayPills"></div>
+  <div id="dayLabel"></div>
+  <div id="classList"></div>
+</div>
 
-  <div id="panelScroll">
-    <!-- schedule panel -->
-    <div id="panelSched">
-      <button id="homeBtn">🏠 Take me home (Carroll Hall)</button>
-      <select id="daySel"></select>
-      <div id="classList"></div>
-    </div>
-
-    <!-- places panel -->
-    <div id="panelPlaces" style="display:none">
-      <input id="searchBox" type="text" placeholder="Where to, Bella? 🐺" autocomplete="off">
-      <div id="chips"></div>
-      <div id="placeList"></div>
+<!-- compass screen -->
+<div class="screen" id="screenCompass">
+  <div id="roseBox">
+    <div id="facingNotch"></div>
+    <svg id="rose" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#3a3a3f" stroke-width="2"/>
+      <g id="ticks"></g>
+      <text x="100" y="30" text-anchor="middle" fill="#ff453a" font-size="22" font-weight="900">N</text>
+      <text x="178" y="107" text-anchor="middle" fill="#ddd" font-size="18" font-weight="700">E</text>
+      <text x="100" y="186" text-anchor="middle" fill="#ddd" font-size="18" font-weight="700">S</text>
+      <text x="22" y="107" text-anchor="middle" fill="#ddd" font-size="18" font-weight="700">W</text>
+    </svg>
+    <div id="destArrow">
+      <svg viewBox="0 0 24 24" style="width:70%; height:70%"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#ff453a" stroke="#fff" stroke-width="0.8"/></svg>
     </div>
   </div>
-  <div id="hint">Tip: press &amp; hold anywhere on the map to navigate there</div>
+  <div id="compassDist"></div>
+  <div id="compassHeadline">which way am i facing?</div>
+  <div id="compassSub">hold ur phone flat like a snap map 🗺️</div>
+  <button id="enableCompassBtn">tap to turn on compass 🧭</button>
+</div>
+
+<!-- bottom nav -->
+<div id="nav">
+  <button class="navItem on" data-screen="map"><span class="ic">🗺️</span><span class="lb">Map</span></button>
+  <button class="navItem" data-screen="classes"><span class="ic">📅</span><span class="lb">Classes</span></button>
+  <button class="navItem" data-screen="compass"><span class="ic">🧭</span><span class="lb">Compass</span></button>
+  <button class="navItem" id="navFood"><span class="ic">🍕</span><span class="lb">Feed me</span></button>
+</div>
+
+<!-- first-open welcome -->
+<div id="welcome">
+  <div class="wolf">🐺</div>
+  <h1>hiii bella 👋</h1>
+  <p>ur personal "where tf am i going" app.<br>tap below &amp; hit <b>Allow</b> so i can find u —<br>then just follow the arrow 💅</p>
+  <button id="startBtn">let's gooo 🚀</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ==========================================================================
-   PLACES — edit or add here. Coordinates are close but approximate; if a pin
-   looks off, press & hold the real spot on the map and "＋ Save spot".
-   cats: class | dorm | dining | study | fun | health | landmark
+   PLACES — building footprint centers pulled from OpenStreetMap (verified).
+   cats: class | dorm | dining | study | fun | health | landmark | saved
    ========================================================================== */
 const CATS = {
-  class:    { label:"🎓 Her Classes", chip:"🎓 Classes" },
-  dorm:     { label:"🏠 Dorms",       chip:"🏠 Dorms" },
-  dining:   { label:"🍽️ Dining",      chip:"🍽️ Dining" },
-  study:    { label:"📚 Study",       chip:"📚 Study" },
-  fun:      { label:"🎉 Fun & Rec",   chip:"🎉 Fun" },
-  health:   { label:"🏥 Health",      chip:"🏥 Health" },
-  landmark: { label:"⭐ Landmarks",   chip:"⭐ Landmarks" },
-  saved:    { label:"💾 Saved",       chip:"💾 Saved" },
+  class:    { chip:"🎓 Classes" },
+  dorm:     { chip:"🏠 Dorms" },
+  dining:   { chip:"🍽️ Dining" },
+  study:    { chip:"📚 Study" },
+  fun:      { chip:"🎉 Fun" },
+  health:   { chip:"🏥 Health" },
+  landmark: { chip:"⭐ Landmarks" },
+  saved:    { chip:"💾 Saved" },
 };
 
-/* All coordinates below are building footprint centers pulled from
-   OpenStreetMap (Overpass API) — verified, not eyeballed. */
 const PLACES = [
-  /* --- her class buildings (the important ones!) --- */
+  /* --- her class buildings --- */
   { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78634, lng:-78.66785 },
   { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78685, lng:-78.66579 },
   { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78654, lng:-78.66733 },
@@ -236,7 +301,7 @@ const PLACES = [
   /* --- home --- */
   { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269 },
 
-  /* --- dorms / where people live --- */
+  /* --- dorms --- */
   { name:"Metcalf Hall",     cat:"dorm", emoji:"🛏️", sub:"Right next to Carroll",  lat:35.78549, lng:-78.67313 },
   { name:"Bowen Hall",       cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78564, lng:-78.67359 },
   { name:"Tucker Hall",      cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78504, lng:-78.67401 },
@@ -254,20 +319,20 @@ const PLACES = [
   { name:"Wolf Village Apartments", cat:"dorm", emoji:"🐺", sub:"Apartments",       lat:35.78660, lng:-78.68470 },
 
   /* --- dining --- */
-  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",     lat:35.78548, lng:-78.67766 },
-  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",     lat:35.78214, lng:-78.66684 },
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766 },
+  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684 },
   { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958 },
-  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",   lat:35.78401, lng:-78.67082 },
-  { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",      lat:35.78612, lng:-78.68512 },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082 },
+  { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",       lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
   { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78750, lng:-78.67000 },
   { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial (take Wolfline!)", lat:35.76930, lng:-78.67644 },
 
   /* --- fun & rec --- */
-  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",      lat:35.78350, lng:-78.67250 },
-  { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",      lat:35.78352, lng:-78.66991 },
-  { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",  lat:35.78511, lng:-78.67452 },
+  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250 },
+  { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",       lat:35.78352, lng:-78.66991 },
+  { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",   lat:35.78511, lng:-78.67452 },
   { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football (it's a hike)", lat:35.80080, lng:-78.71970 },
 
   /* --- health & landmarks --- */
@@ -276,7 +341,7 @@ const PLACES = [
 ];
 
 /* ==========================================================================
-   BELLA'S FALL SCHEDULE  (day: 1=Mon … 5=Fri)
+   BELLA'S FALL SCHEDULE  (day: 1=Mon … 5=Fri; min = minutes since midnight)
    ========================================================================== */
 const SCHEDULE = {
   1: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
@@ -295,12 +360,35 @@ const SCHEDULE = {
 };
 const DAYNAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
-/* ---------- map setup ---------- */
-const NCSU = [35.7855, -78.6680];
-const map = L.map('map', { zoomControl:false }).setView(NCSU, 16);
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+function toast(msg, ms=3000) {
+  $('toast').textContent = msg; $('toast').style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => $('toast').style.display='none', ms);
+}
+const R = 6371000;
+function haversine(a, b) {
+  const dLat=(b[0]-a[0])*Math.PI/180, dLng=(b[1]-a[1])*Math.PI/180;
+  const la1=a[0]*Math.PI/180, la2=b[0]*Math.PI/180;
+  const h=Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function bearing(a, b) {
+  const la1=a[0]*Math.PI/180, la2=b[0]*Math.PI/180, dLng=(b[1]-a[1])*Math.PI/180;
+  const y=Math.sin(dLng)*Math.cos(la2);
+  const x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLng);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function fmtDist(m) {
+  const ft=m*3.28084;
+  return ft<950 ? Math.max(10,Math.round(ft/10)*10)+' ft' : (m/1609.34).toFixed(1)+' mi';
+}
+function compassWord(b){ return ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8]; }
+
+/* ---------- map ---------- */
+const map = L.map('map', { zoomControl:false }).setView([35.7855,-78.6690], 16);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 const savedPlaces = JSON.parse(localStorage.getItem('bellaSpots') || '[]');
@@ -312,7 +400,7 @@ const placeMarkers = L.layerGroup().addTo(map);
 function drawPlaceMarkers() {
   placeMarkers.clearLayers();
   allPlaces().forEach(p => {
-    L.marker([p.lat, p.lng], {
+    L.marker([p.lat,p.lng], {
       icon: L.divIcon({ className:'', html:`<div style="font-size:20px; text-shadow:0 1px 3px rgba(0,0,0,.4)">${p.emoji||'📌'}</div>`, iconSize:[24,24], iconAnchor:[12,12] })
     }).addTo(placeMarkers).on('click', () => setDestination(p));
   });
@@ -320,345 +408,385 @@ function drawPlaceMarkers() {
 drawPlaceMarkers();
 
 /* ---------- state ---------- */
-let myPos = null, myMarker = null, accCircle = null;
-let dest = null, destMarker = null;
-let routeLine = null, routeCoords = [], cumDist = [], totalDist = 0, maneuvers = [];
-let heading = null, lastRouteFetch = 0, watchId = null, followMe = true;
+let myPos=null, myMarker=null, accCircle=null;
+let dest=null, destMarker=null;
+let routeLine=null, routeCoords=[], cumDist=[], totalDist=0, maneuvers=[];
+let heading=null, lastRouteFetch=0, watchId=null, followMe=true, pendingHungry=false;
+let remainingDist=null, currentScreen='map';
 
-const $ = id => document.getElementById(id);
-function toast(msg, ms=3000) {
-  $('toast').textContent = msg; $('toast').style.display = 'block';
-  clearTimeout(toast._t); toast._t = setTimeout(() => $('toast').style.display='none', ms);
-}
-
-/* ---------- geo math ---------- */
-const R = 6371000;
-function haversine(a, b) {
-  const dLat = (b[0]-a[0])*Math.PI/180, dLng = (b[1]-a[1])*Math.PI/180;
-  const la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180;
-  const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
-  return 2*R*Math.asin(Math.sqrt(h));
-}
-function bearing(a, b) {
-  const la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180, dLng = (b[1]-a[1])*Math.PI/180;
-  const y = Math.sin(dLng)*Math.cos(la2);
-  const x = Math.cos(la1)*Math.sin(la2) - Math.sin(la1)*Math.cos(la2)*Math.cos(dLng);
-  return (Math.atan2(y,x)*180/Math.PI + 360) % 360;
-}
-function fmtDist(m) {
-  const ft = m*3.28084;
-  return ft < 950 ? Math.max(10, Math.round(ft/10)*10) + ' ft' : (m/1609.34).toFixed(1) + ' mi';
-}
-function compassWord(b) {
-  return ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8];
-}
-
-/* ---------- tabs ---------- */
-$('tabSched').onclick = () => switchTab(true);
-$('tabPlaces').onclick = () => switchTab(false);
-function switchTab(sched) {
-  $('tabSched').classList.toggle('on', sched);
-  $('tabPlaces').classList.toggle('on', !sched);
-  $('panelSched').style.display = sched ? '' : 'none';
-  $('panelPlaces').style.display = sched ? 'none' : '';
-}
-
-/* ---------- schedule UI ---------- */
-const today = new Date().getDay();
-(function buildDaySel() {
-  const sel = $('daySel');
-  for (let d = 1; d <= 5; d++) {
-    const o = document.createElement('option');
-    o.value = d;
-    o.textContent = (d === today ? '📅 Today — ' : '') + DAYNAMES[d];
-    sel.appendChild(o);
+/* ---------- screens (insta-style nav) ---------- */
+document.querySelectorAll('.navItem[data-screen]').forEach(btn => {
+  btn.onclick = () => showScreen(btn.dataset.screen);
+});
+function showScreen(name) {
+  currentScreen = name;
+  document.querySelectorAll('.navItem[data-screen]').forEach(b => b.classList.toggle('on', b.dataset.screen===name));
+  $('screenClasses').classList.toggle('on', name==='classes');
+  $('screenCompass').classList.toggle('on', name==='compass');
+  if (name==='compass') {
+    if (needsCompassPerm && !compassGranted) $('enableCompassBtn').classList.add('on');
+    updateCompassScreen();
   }
-  sel.value = (today >= 1 && today <= 5) ? today : 1;
-  sel.onchange = () => renderClasses(+sel.value);
-  renderClasses(+sel.value);
+  if (name==='map') setTimeout(() => map.invalidateSize(), 50);
+}
+$('navFood').onclick = () => { showScreen('map'); feedBella(); };
+
+/* ---------- where-to sheet ---------- */
+$('wherePill').onclick = () => { $('whereSheet').classList.add('on'); };
+$('grab').onclick = () => $('whereSheet').classList.remove('on');
+map.on('click', () => $('whereSheet').classList.remove('on'));
+
+let activeChip='all';
+(function buildChips(){
+  const chips=$('chips');
+  const mk=(key,label)=>{
+    const b=document.createElement('button');
+    b.className='chip'+(key==='all'?' on':''); b.textContent=label;
+    b.onclick=()=>{ activeChip=key;
+      chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+      b.classList.add('on'); renderList($('searchBox').value); };
+    chips.appendChild(b);
+  };
+  mk('all','✨ All');
+  Object.keys(CATS).forEach(k=>mk(k,CATS[k].chip));
 })();
+function renderList(filter=''){
+  const f=filter.trim().toLowerCase();
+  $('placeList').innerHTML='';
+  allPlaces()
+    .filter(p=>activeChip==='all'||p.cat===activeChip)
+    .filter(p=>!f||p.name.toLowerCase().includes(f)||(p.sub||'').toLowerCase().includes(f))
+    .forEach(p=>{
+      const d=document.createElement('div');
+      d.className='place';
+      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||''}</div></div>`;
+      d.onclick=()=>{ $('whereSheet').classList.remove('on'); setDestination(p); };
+      $('placeList').appendChild(d);
+    });
+}
+renderList();
+$('searchBox').addEventListener('input', e=>renderList(e.target.value));
 
-function renderClasses(day) {
-  const list = $('classList');
-  list.innerHTML = '';
-  const classes = SCHEDULE[day] || [];
-  if (!classes.length) {
-    list.innerHTML = '<div class="noclass">No classes — enjoy it 😌</div>';
-    return;
+/* ---------- classes screen ---------- */
+const today = new Date().getDay();
+let shownDay = (today>=1 && today<=5) ? today : 1;
+(function buildDayPills(){
+  const wrap=$('dayPills');
+  const letters=['M','T','W','T','F'];
+  for (let d=1; d<=5; d++){
+    const b=document.createElement('button');
+    b.className='dayPill'+(d===shownDay?' on':'')+(d===today?' today':'');
+    b.textContent=letters[d-1];
+    b.onclick=()=>{ shownDay=d;
+      wrap.querySelectorAll('.dayPill').forEach((p,i)=>p.classList.toggle('on', i===d-1));
+      renderClasses(d); };
+    wrap.appendChild(b);
   }
-  const now = new Date();
-  const nowMin = now.getHours()*60 + now.getMinutes();
-  const isToday = day === today;
-  let nextFlagged = false;
-  classes.forEach(cl => {
-    const d = document.createElement('div');
-    d.className = 'cls';
-    let badge = '';
-    if (isToday && !nextFlagged && nowMin < cl.min + 50) {
-      badge = nowMin >= cl.min ? '<span class="badge" style="background:#e67e22">NOW</span>' : '<span class="badge">NEXT</span>';
-      nextFlagged = true;
+  renderClasses(shownDay);
+})();
+function renderClasses(day){
+  $('dayLabel').textContent = (day===today?'today — ':'') + DAYNAMES[day];
+  const list=$('classList'); list.innerHTML='';
+  const classes=SCHEDULE[day]||[];
+  if(!classes.length){ list.innerHTML='<div class="noclass">no classes — slay 😌</div>'; return; }
+  const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes();
+  const isToday=day===today; let nextFlagged=false;
+  classes.forEach(cl=>{
+    const d=document.createElement('div'); d.className='cls';
+    let badge='';
+    if(isToday && !nextFlagged && nowMin < cl.min+50){
+      badge = nowMin>=cl.min ? '<span class="badge" style="background:#e67e22">NOW</span>' : '<span class="badge">NEXT</span>';
+      d.classList.add('next'); nextFlagged=true;
     }
-    d.innerHTML = `
+    d.innerHTML=`
       <div class="time">${cl.t}</div>
       <div>
         <div class="course">${cl.c}${badge}</div>
         <div class="where">${cl.b} · ${cl.r}</div>
       </div>
       <button class="go">Go</button>`;
-    d.querySelector('.go').onclick = () => {
-      const p = findPlace(cl.b);
-      if (p) setDestination({ ...p, name:`${cl.c} — ${cl.b}` });
+    d.querySelector('.go').onclick=()=>{
+      const p=findPlace(cl.b);
+      if(p){ showScreen('map'); setDestination({...p, name:`${cl.c} — ${cl.b}`}); }
     };
     list.appendChild(d);
   });
 }
-$('homeBtn').onclick = () => {
-  const p = findPlace('Carroll Hall');
-  if (p) setDestination(p);
-};
+$('homeBtn').onclick=()=>{ const p=findPlace('Carroll Hall'); if(p){ showScreen('map'); setDestination(p); } };
 
-/* ---------- I'M HUNGRY: route to physically nearest food ---------- */
-let pendingHungry = false;
-function feedBella() {
-  if (!myPos) {
-    pendingHungry = true;
-    startLocate();
-    toast('Hold on, finding you first… 🛰️');
-    return;
-  }
-  pendingHungry = false;
-  let best = null, bd = Infinity;
-  allPlaces().filter(p => p.cat === 'dining').forEach(p => {
-    const d = haversine(myPos, [p.lat, p.lng]);
-    if (d < bd) { bd = d; best = p; }
+/* ---------- I'M HUNGRY ---------- */
+function feedBella(){
+  if(!myPos){ pendingHungry=true; startLocate(); toast('hold on, finding u first… 🛰️'); return; }
+  pendingHungry=false;
+  let best=null, bd=Infinity;
+  allPlaces().filter(p=>p.cat==='dining').forEach(p=>{
+    const d=haversine(myPos,[p.lat,p.lng]);
+    if(d<bd){ bd=d; best=p; }
   });
-  if (best) {
-    setDestination(best);
-    toast(`Closest food: ${best.name} — ${fmtDist(bd)} away ${best.emoji}`);
-  }
+  if(best){ setDestination(best); toast(`closest food: ${best.name} — ${fmtDist(bd)} ${best.emoji}`); }
 }
-$('hungryBtn').onclick = feedBella;
-
-/* ---------- places UI ---------- */
-let activeChip = 'all';
-(function buildChips() {
-  const chips = $('chips');
-  const mk = (key, label) => {
-    const b = document.createElement('button');
-    b.className = 'chip' + (key === 'all' ? ' on' : '');
-    b.textContent = label;
-    b.onclick = () => {
-      activeChip = key;
-      chips.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-      b.classList.add('on');
-      renderList($('searchBox').value);
-    };
-    chips.appendChild(b);
-  };
-  mk('all', 'All');
-  Object.keys(CATS).forEach(k => mk(k, CATS[k].chip));
-})();
-
-function renderList(filter='') {
-  const f = filter.trim().toLowerCase();
-  $('placeList').innerHTML = '';
-  allPlaces()
-    .filter(p => activeChip === 'all' || p.cat === activeChip)
-    .filter(p => !f || p.name.toLowerCase().includes(f) || (p.sub||'').toLowerCase().includes(f))
-    .forEach(p => {
-      const d = document.createElement('div');
-      d.className = 'place';
-      d.innerHTML = `<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||CATS[p.cat]?.label||''}</div></div>`;
-      d.onclick = () => setDestination(p);
-      $('placeList').appendChild(d);
-    });
-}
-renderList();
-$('searchBox').addEventListener('input', e => renderList(e.target.value));
+$('hungryBtn').onclick=()=>{ showScreen('map'); feedBella(); };
 
 /* ---------- location ---------- */
-function startLocate() {
-  if (!navigator.geolocation) { toast("This phone doesn't support GPS 😢"); return; }
-  if (watchId !== null) return;
-  toast('Finding you… 🛰️');
-  watchId = navigator.geolocation.watchPosition(onPosition, err => {
-    toast(err.code === 1 ? 'Location is blocked — allow it in Settings → Safari → Location 🙏' : 'Hmm, GPS is being weird. Try stepping outside?');
+function startLocate(){
+  if(!navigator.geolocation){ toast("this phone doesn't do GPS 😢"); return; }
+  if(watchId!==null) return;
+  watchId=navigator.geolocation.watchPosition(onPosition, err=>{
+    watchId=null;
+    toast(err.code===1 ? 'location is blocked 😭 go to Settings → Safari → Location and allow it' : 'GPS being weird… try stepping outside?');
   }, { enableHighAccuracy:true, maximumAge:2000, timeout:20000 });
 }
-function onPosition(pos) {
-  myPos = [pos.coords.latitude, pos.coords.longitude];
-  if (!myMarker) {
-    myMarker = L.marker(myPos, { icon: L.divIcon({ className:'', html:'<div class="my-dot"></div>', iconSize:[18,18], iconAnchor:[9,9] }), zIndexOffset:1000 }).addTo(map);
-    accCircle = L.circle(myPos, { radius:pos.coords.accuracy, color:'#1a73e8', weight:1, fillOpacity:.08 }).addTo(map);
-    map.setView(myPos, 17);
+function onPosition(pos){
+  myPos=[pos.coords.latitude, pos.coords.longitude];
+  if(!myMarker){
+    myMarker=L.marker(myPos,{ icon:L.divIcon({className:'', html:'<div class="my-dot"></div>', iconSize:[18,18], iconAnchor:[9,9]}), zIndexOffset:1000 }).addTo(map);
+    accCircle=L.circle(myPos,{ radius:pos.coords.accuracy, color:'#1a73e8', weight:1, fillOpacity:.08 }).addTo(map);
+    map.setView(myPos,17);
+    toast('found u! 🫵🐺');
   } else {
     myMarker.setLatLng(myPos);
     accCircle.setLatLng(myPos).setRadius(pos.coords.accuracy);
-    if (followMe && dest) map.panTo(myPos);
+    if(followMe && dest) map.panTo(myPos);
   }
-  if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.speed > 0.5) heading = pos.coords.heading;
-  if (pendingHungry) { feedBella(); return; }
-  if (dest) routeCoords.length ? updateProgress() : fetchRoute();
+  if(pos.coords.heading!==null && !isNaN(pos.coords.heading) && pos.coords.speed>0.5) heading=pos.coords.heading;
+  if(pendingHungry){ feedBella(); return; }
+  if(dest) routeCoords.length ? updateProgress() : fetchRoute();
 }
-$('locBtn').onclick = () => {
-  startLocate();
-  followMe = true;
-  if (myPos) map.setView(myPos, 17);
-};
-map.on('dragstart', () => followMe = false);
+$('locBtn').onclick=()=>{ startLocate(); followMe=true; if(myPos) map.setView(myPos,17); };
+map.on('dragstart', ()=>followMe=false);
 
-/* ---------- compass (iPhone needs one permission tap) ---------- */
-function onOrient(e) {
-  if (e.webkitCompassHeading !== undefined) heading = e.webkitCompassHeading;
-  else if (e.absolute && e.alpha !== null) heading = 360 - e.alpha;
+/* ---------- compass ---------- */
+const needsCompassPerm = window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission==='function';
+let compassGranted=false;
+function onOrient(e){
+  if(e.webkitCompassHeading!==undefined) heading=e.webkitCompassHeading;
+  else if(e.absolute && e.alpha!==null) heading=360-e.alpha;
+  if(currentScreen==='compass') updateCompassScreen();
 }
-if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-  $('compassBtn').style.display = 'block';
-  $('compassBtn').onclick = () => DeviceOrientationEvent.requestPermission().then(s => {
-    if (s === 'granted') { window.addEventListener('deviceorientation', onOrient); $('compassBtn').style.display='none'; toast('Compass on! 🧭'); }
-  }).catch(()=>{});
-} else {
-  window.addEventListener('deviceorientationabsolute', onOrient);
-  window.addEventListener('deviceorientation', onOrient);
+function requestCompass(){
+  if(!window.DeviceOrientationEvent) return;
+  if(needsCompassPerm){
+    DeviceOrientationEvent.requestPermission().then(s=>{
+      if(s==='granted'){ compassGranted=true;
+        window.addEventListener('deviceorientation', onOrient);
+        $('enableCompassBtn').classList.remove('on');
+        toast('compass on! 🧭'); }
+    }).catch(()=>{});
+  } else {
+    compassGranted=true;
+    window.addEventListener('deviceorientationabsolute', onOrient);
+    window.addEventListener('deviceorientation', onOrient);
+  }
+}
+$('enableCompassBtn').onclick=requestCompass;
+
+/* build compass tick marks */
+(function(){
+  const g=$('ticks'); let html='';
+  for(let a=0;a<360;a+=15){
+    const r1=a%90===0?84:90, r2=96;
+    const rad=a*Math.PI/180;
+    const x1=100+r1*Math.sin(rad), y1=100-r1*Math.cos(rad);
+    const x2=100+r2*Math.sin(rad), y2=100-r2*Math.cos(rad);
+    html+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${a%90===0?'#888':'#444'}" stroke-width="${a%90===0?3:1.5}"/>`;
+  }
+  g.innerHTML=html;
+})();
+
+function getGuideBearing(){
+  if(!myPos || !dest) return null;
+  if(routeCoords.length>2){
+    let best=0, bd=Infinity;
+    for(let i=0;i<routeCoords.length;i++){
+      const d=haversine(myPos,routeCoords[i]);
+      if(d<bd){ bd=d; best=i; }
+    }
+    let look=best;
+    while(look<routeCoords.length-1 && cumDist[look]-cumDist[best]<15) look++;
+    return bearing(myPos, routeCoords[look]);
+  }
+  return bearing(myPos, [dest.lat, dest.lng]);
+}
+
+function updateCompassScreen(){
+  const h = heading;
+  $('rose').style.transform = `rotate(${h===null?0:-h}deg)`;
+  if(dest && myPos){
+    const gb=getGuideBearing();
+    $('destArrow').classList.add('on');
+    $('destArrow').style.transform=`rotate(${h===null?gb:(gb-h+360)%360}deg)`;
+    $('compassDist').classList.add('on');
+    $('compassDist').textContent = remainingDist!==null ? fmtDist(remainingDist) : '…';
+    $('compassHeadline').textContent = `➡️ ${dest.name}`;
+    $('compassSub').textContent = h===null
+      ? 'arrow = map direction (turn compass on for real-time 🧭)'
+      : 'just walk where the red arrow points 💅';
+  } else {
+    $('destArrow').classList.remove('on');
+    $('compassDist').classList.remove('on');
+    if(h===null){
+      $('compassHeadline').textContent='which way am i facing?';
+      $('compassSub').textContent= needsCompassPerm && !compassGranted
+        ? 'tap the yellow button below 👇' : 'hold ur phone flat like a snap map 🗺️';
+    } else {
+      $('compassHeadline').textContent=`ur facing ${compassWord(h)} ${'⬆️'}`;
+      $('compassSub').textContent=`${Math.round(h)}° · pick a class & the arrow will guide u`;
+    }
+  }
 }
 
 /* ---------- destination + routing ---------- */
-function setDestination(p) {
-  dest = p;
-  if (destMarker) map.removeLayer(destMarker);
-  destMarker = L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>`).openPopup();
+function setDestination(p){
+  dest=p;
+  if(destMarker) map.removeLayer(destMarker);
+  destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>`).openPopup();
   clearRoute();
   $('banner').classList.add('on');
-  $('statsRow').classList.add('on');
-  $('sheet').classList.add('mini');
-  $('instr').textContent = `Let's go: ${p.name}`;
-  $('instrSub').textContent = myPos ? 'Getting your walking route…' : 'Tap 📍 so I can find you first';
+  $('statsBar').classList.add('on');
+  $('wherePill').style.display='none';
+  $('instr').textContent=`let's go: ${p.name}`;
+  $('instrSub').textContent= myPos ? 'getting ur walking route…' : 'tap 📍 so i can find u first';
   $('saveBtn').classList.toggle('on', !!p._unsaved);
-  if (!myPos) startLocate(); else { lastRouteFetch = 0; fetchRoute(); }
-  followMe = true;
+  if(!myPos) startLocate(); else { lastRouteFetch=0; fetchRoute(); }
+  followMe=true;
 }
-$('grab').onclick = () => $('sheet').classList.toggle('mini');
-function clearRoute() {
-  if (routeLine) map.removeLayer(routeLine);
-  routeLine = null; routeCoords = []; cumDist = []; maneuvers = []; totalDist = 0;
+function clearRoute(){
+  if(routeLine) map.removeLayer(routeLine);
+  routeLine=null; routeCoords=[]; cumDist=[]; maneuvers=[]; totalDist=0; remainingDist=null;
 }
-$('endBtn').onclick = () => {
-  dest = null; clearRoute();
-  if (destMarker) { map.removeLayer(destMarker); destMarker = null; }
+$('endBtn').onclick=()=>{
+  dest=null; clearRoute();
+  if(destMarker){ map.removeLayer(destMarker); destMarker=null; }
   $('banner').classList.remove('on');
-  $('statsRow').classList.remove('on');
-  $('sheet').classList.remove('mini');
+  $('statsBar').classList.remove('on');
+  $('wherePill').style.display='';
+  if(currentScreen==='compass') updateCompassScreen();
 };
 
-async function fetchRoute() {
-  if (!myPos || !dest) return;
-  const now = Date.now();
-  if (now - lastRouteFetch < 8000) return;
-  lastRouteFetch = now;
-  const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${myPos[1]},${myPos[0]};${dest.lng},${dest.lat}?overview=full&geometries=geojson&steps=true`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.code !== 'Ok' || !data.routes.length) throw new Error('no route');
-    const route = data.routes[0];
-    routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-    cumDist = [0]; totalDist = 0;
-    for (let i = 1; i < routeCoords.length; i++) {
-      totalDist += haversine(routeCoords[i-1], routeCoords[i]);
+async function fetchRoute(){
+  if(!myPos || !dest) return;
+  const now=Date.now();
+  if(now-lastRouteFetch<8000) return;
+  lastRouteFetch=now;
+  const url=`https://routing.openstreetmap.de/routed-foot/route/v1/foot/${myPos[1]},${myPos[0]};${dest.lng},${dest.lat}?overview=full&geometries=geojson&steps=true`;
+  try{
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data.code!=='Ok' || !data.routes.length) throw new Error('no route');
+    const route=data.routes[0];
+    routeCoords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
+    cumDist=[0]; totalDist=0;
+    for(let i=1;i<routeCoords.length;i++){
+      totalDist+=haversine(routeCoords[i-1],routeCoords[i]);
       cumDist.push(totalDist);
     }
-    maneuvers = [];
-    route.legs.forEach(leg => leg.steps.forEach(s => {
-      const loc = [s.maneuver.location[1], s.maneuver.location[0]];
-      let best = 0, bd = Infinity;
-      for (let i = 0; i < routeCoords.length; i++) {
-        const d = haversine(loc, routeCoords[i]);
-        if (d < bd) { bd = d; best = i; }
+    maneuvers=[];
+    route.legs.forEach(leg=>leg.steps.forEach(s=>{
+      const loc=[s.maneuver.location[1], s.maneuver.location[0]];
+      let best=0, bd=Infinity;
+      for(let i=0;i<routeCoords.length;i++){
+        const d=haversine(loc,routeCoords[i]);
+        if(d<bd){ bd=d; best=i; }
       }
-      maneuvers.push({ at: cumDist[best], text: stepText(s) });
+      maneuvers.push({ at:cumDist[best], text:stepText(s) });
     }));
-    if (routeLine) map.removeLayer(routeLine);
-    routeLine = L.polyline(routeCoords, { color:'#CC0000', weight:6, opacity:.85, lineJoin:'round' }).addTo(map);
-    map.fitBounds(routeLine.getBounds(), { padding:[70,70] });
+    if(routeLine) map.removeLayer(routeLine);
+    routeLine=L.polyline(routeCoords,{ color:'#CC0000', weight:6, opacity:.85, lineJoin:'round' }).addTo(map);
+    map.fitBounds(routeLine.getBounds(),{ padding:[70,70] });
     updateProgress();
-  } catch (e) {
-    // fallback: straight line + compass guidance
-    routeCoords = [myPos, [dest.lat, dest.lng]];
-    cumDist = [0, haversine(myPos, [dest.lat, dest.lng])];
-    totalDist = cumDist[1];
-    maneuvers = [{ at:0, text:'Head ' + compassWord(bearing(myPos, [dest.lat, dest.lng])) + ' (as the wolf runs 🐺)' }];
-    if (routeLine) map.removeLayer(routeLine);
-    routeLine = L.polyline(routeCoords, { color:'#CC0000', weight:5, dashArray:'8 10', opacity:.8 }).addTo(map);
+  }catch(e){
+    routeCoords=[myPos,[dest.lat,dest.lng]];
+    cumDist=[0, haversine(myPos,[dest.lat,dest.lng])];
+    totalDist=cumDist[1];
+    maneuvers=[{ at:0, text:'head '+compassWord(bearing(myPos,[dest.lat,dest.lng]))+' 🐺' }];
+    if(routeLine) map.removeLayer(routeLine);
+    routeLine=L.polyline(routeCoords,{ color:'#CC0000', weight:5, dashArray:'8 10', opacity:.8 }).addTo(map);
     updateProgress();
   }
 }
 
-function stepText(s) {
-  const t = s.maneuver.type, m = s.maneuver.modifier || '';
-  const onto = s.name ? ` onto ${s.name}` : '';
-  const M = { 'left':'Turn left','slight left':'Bear left','sharp left':'Sharp left',
-              'right':'Turn right','slight right':'Bear right','sharp right':'Sharp right',
-              'straight':'Continue straight','uturn':'Turn around' };
-  if (t === 'depart') return 'Head ' + compassWord(s.maneuver.bearing_after) + onto;
-  if (t === 'arrive') return "You're here!! 🎉🐺";
-  if (t === 'roundabout' || t === 'rotary') return 'Go around the circle' + onto;
-  return (M[m] || 'Continue') + onto;
+function stepText(s){
+  const t=s.maneuver.type, m=s.maneuver.modifier||'';
+  const onto=s.name?` onto ${s.name}`:'';
+  const M={ 'left':'turn left ⬅️','slight left':'bear left ↖️','sharp left':'sharp left ⬅️',
+            'right':'turn right ➡️','slight right':'bear right ↗️','sharp right':'sharp right ➡️',
+            'straight':'keep going straight ⬆️','uturn':'turn around 🔄' };
+  if(t==='depart') return 'head '+compassWord(s.maneuver.bearing_after)+onto;
+  if(t==='arrive') return "u made it!! 🎉🐺";
+  if(t==='roundabout'||t==='rotary') return 'go around the circle'+onto;
+  return (M[m]||'keep going')+onto;
 }
 
-function updateProgress() {
-  if (!myPos || !routeCoords.length) return;
-  let best = 0, bd = Infinity;
-  for (let i = 0; i < routeCoords.length; i++) {
-    const d = haversine(myPos, routeCoords[i]);
-    if (d < bd) { bd = d; best = i; }
+function updateProgress(){
+  if(!myPos || !routeCoords.length) return;
+  let best=0, bd=Infinity;
+  for(let i=0;i<routeCoords.length;i++){
+    const d=haversine(myPos,routeCoords[i]);
+    if(d<bd){ bd=d; best=i; }
   }
-  if (bd > 45 && Date.now() - lastRouteFetch > 10000) { lastRouteFetch = 0; fetchRoute(); return; }
+  if(bd>45 && Date.now()-lastRouteFetch>10000){ lastRouteFetch=0; fetchRoute(); return; }
 
-  const along = cumDist[best];
-  const remaining = Math.max(0, totalDist - along) + Math.min(bd, 30);
-  $('distVal').textContent = fmtDist(remaining);
-  $('etaVal').textContent = Math.max(1, Math.ceil(remaining / 80)) + ' min';
+  const along=cumDist[best];
+  remainingDist=Math.max(0,totalDist-along)+Math.min(bd,30);
+  $('distVal').textContent=fmtDist(remainingDist);
+  $('etaVal').textContent=Math.max(1,Math.ceil(remainingDist/80))+' min';
 
-  if (remaining < 18 || haversine(myPos, [dest.lat, dest.lng]) < 18) {
-    $('instr').textContent = "You made it!! 🎉🐺";
-    $('instrSub').textContent = 'Proud of you 💛';
+  if(remainingDist<18 || haversine(myPos,[dest.lat,dest.lng])<18){
+    $('instr').textContent="u made it!! 🎉🐺";
+    $('instrSub').textContent='so proud of u 💛';
+    if(currentScreen==='compass') updateCompassScreen();
     return;
   }
-  let next = null;
-  for (const mv of maneuvers) if (mv.at > along + 8) { next = mv; break; }
-  if (next) {
-    $('instr').textContent = next.text;
-    $('instrSub').textContent = 'in ' + fmtDist(next.at - along);
+  let next=null;
+  for(const mv of maneuvers) if(mv.at>along+8){ next=mv; break; }
+  if(next){
+    $('instr').textContent=next.text;
+    $('instrSub').textContent='in '+fmtDist(next.at-along);
   } else {
-    $('instr').textContent = 'Keep going — almost there!';
-    $('instrSub').textContent = fmtDist(remaining) + ' left';
+    $('instr').textContent='keep going — almost there!';
+    $('instrSub').textContent=fmtDist(remainingDist)+' left';
   }
-  let look = best;
-  while (look < routeCoords.length-1 && cumDist[look] - along < 15) look++;
-  const b = bearing(myPos, routeCoords[look]);
-  const rot = heading === null ? b : (b - heading + 360) % 360;
-  $('arrow').style.transform = `rotate(${rot}deg)`;
+  let look=best;
+  while(look<routeCoords.length-1 && cumDist[look]-along<15) look++;
+  const b=bearing(myPos,routeCoords[look]);
+  $('arrow').style.transform=`rotate(${heading===null?b:(b-heading+360)%360}deg)`;
+  if(currentScreen==='compass') updateCompassScreen();
 }
 
 /* ---------- long-press to drop a pin ---------- */
-map.on('contextmenu', e => {
-  setDestination({ name:'Dropped pin', cat:'saved', emoji:'📍',
-                   lat:e.latlng.lat, lng:e.latlng.lng, _unsaved:true });
+map.on('contextmenu', e=>{
+  setDestination({ name:'dropped pin', cat:'saved', emoji:'📍', lat:e.latlng.lat, lng:e.latlng.lng, _unsaved:true });
 });
-$('saveBtn').onclick = () => {
-  if (!dest || !dest._unsaved) return;
-  const name = prompt('Name this spot:', 'My spot');
-  if (!name) return;
-  const p = { name, cat:'saved', sub:'Saved spot ⭐', emoji:'⭐', lat:dest.lat, lng:dest.lng };
+$('saveBtn').onclick=()=>{
+  if(!dest || !dest._unsaved) return;
+  const name=prompt('name this spot:', 'my spot');
+  if(!name) return;
+  const p={ name, cat:'saved', sub:'saved spot ⭐', emoji:'⭐', lat:dest.lat, lng:dest.lng };
   savedPlaces.push(p);
   localStorage.setItem('bellaSpots', JSON.stringify(savedPlaces));
-  dest = p; $('saveBtn').classList.remove('on');
+  dest=p; $('saveBtn').classList.remove('on');
   drawPlaceMarkers(); renderList();
-  toast(`Saved "${name}" ⭐`);
+  toast(`saved "${name}" ⭐`);
 };
 
-/* refresh guidance every few seconds even if GPS is quiet */
-setInterval(() => { if (dest && routeCoords.length) updateProgress(); }, 3000);
+/* ---------- onboarding ---------- */
+if(localStorage.getItem('onboarded')){
+  $('welcome').classList.add('off');
+  startLocate();
+  if(!needsCompassPerm) requestCompass();
+}
+$('startBtn').onclick=()=>{
+  localStorage.setItem('onboarded','1');
+  $('welcome').classList.add('off');
+  requestCompass();   // must happen inside the tap for iPhone
+  startLocate();
+};
+
+/* keep guidance + compass fresh even when GPS is quiet */
+setInterval(()=>{
+  if(dest && routeCoords.length) updateProgress();
+  else if(currentScreen==='compass') updateCompassScreen();
+}, 2000);
 </script>
 </body>
 </html>
