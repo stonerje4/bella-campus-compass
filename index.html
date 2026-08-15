@@ -406,6 +406,9 @@ const CATS = {
   class:    { chip:"🎓 Classes" },
   dorm:     { chip:"🏠 Dorms" },
   dining:   { chip:"🍽️ Dining" },
+  food:     { chip:"🌮 Food" },
+  bar:      { chip:"🍻 Bars" },
+  greek:    { chip:"🏛️ Greek" },
   study:    { chip:"📚 Study" },
   fun:      { chip:"🎉 Fun" },
   health:   { chip:"🏥 Health" },
@@ -460,6 +463,48 @@ const PLACES = [
   { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",       lat:35.78352, lng:-78.66991 },
   { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",   lat:35.78511, lng:-78.67452 },
   { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football — Wolfline 🚌 on gamedays, walking is wild", lat:35.80080, lng:-78.71970 },
+
+  /* --- restaurants (all coords verified from OSM) --- */
+  { name:"Cook Out",              cat:"food", emoji:"🍔", sub:"THE late night spot",       lat:35.78485, lng:-78.69311 },
+  { name:"Raising Cane's",        cat:"food", emoji:"🐔", sub:"Hillsborough St",           lat:35.78781, lng:-78.66760 },
+  { name:"Chick-fil-A",           cat:"food", emoji:"🐔", sub:"Hillsborough St",           lat:35.78787, lng:-78.67077 },
+  { name:"Chipotle",              cat:"food", emoji:"🌯", sub:"Hillsborough St",           lat:35.78760, lng:-78.66684 },
+  { name:"Shake Shack",           cat:"food", emoji:"🍔", sub:"Village District",          lat:35.78956, lng:-78.65968 },
+  { name:"CAVA",                  cat:"food", emoji:"🥙", sub:"Village District",          lat:35.78939, lng:-78.66167 },
+  { name:"David's Dumpling & Noodle Bar", cat:"food", emoji:"🥟", sub:"Hillsborough St",   lat:35.78590, lng:-78.66149 },
+  { name:"Gonza Tacos y Tequila", cat:"food", emoji:"🌮", sub:"Hillsborough St",           lat:35.78676, lng:-78.66384 },
+  { name:"Guasaca",               cat:"food", emoji:"🫓", sub:"Arepas · Hillsborough St",  lat:35.78808, lng:-78.66881 },
+  { name:"Slice of New York Pizza", cat:"food", emoji:"🍕", sub:"Hillsborough St",         lat:35.78758, lng:-78.66675 },
+  { name:"Gumby's Pizza",         cat:"food", emoji:"🍕", sub:"Late night pokey stix",     lat:35.78893, lng:-78.67166 },
+  { name:"Jersey Mike's",         cat:"food", emoji:"🥪", sub:"Hillsborough St",           lat:35.78894, lng:-78.67201 },
+  { name:"Bojangles'",            cat:"food", emoji:"🍗", sub:"Western Blvd",              lat:35.78519, lng:-78.68875 },
+  { name:"Taco Bell",             cat:"food", emoji:"🌮", sub:"Western Blvd",              lat:35.78431, lng:-78.68953 },
+  { name:"Waffle House",          cat:"food", emoji:"🧇", sub:"2am waffles hit different", lat:35.79443, lng:-78.69064 },
+  { name:"Snoopy's",              cat:"food", emoji:"🌭", sub:"Late night hot dogs",       lat:35.79336, lng:-78.68368 },
+  { name:"Tupelo Honey",          cat:"food", emoji:"🥞", sub:"Brunch date spot",          lat:35.79029, lng:-78.66315 },
+
+  /* --- bars & clubs (verified from OSM) --- */
+  { name:"Mitch's Tavern",       cat:"bar", emoji:"🍺", sub:"Hillsborough St classic",     lat:35.78790, lng:-78.66772 },
+  { name:"Players' Retreat",     cat:"bar", emoji:"🍺", sub:"The PR · NCSU institution",   lat:35.78620, lng:-78.66152 },
+  { name:"Sammy's Tap & Grill",  cat:"bar", emoji:"🍻", sub:"NCSU gameday spot",           lat:35.77766, lng:-78.67719 },
+  { name:"Village Drafthouse",   cat:"bar", emoji:"🍻", sub:"Village District",            lat:35.78988, lng:-78.66078 },
+  { name:"Pantana's Pool Hall",  cat:"bar", emoji:"🎱", sub:"Pool near campus",            lat:35.79021, lng:-78.67784 },
+  { name:"440 Nightclub",        cat:"bar", emoji:"🪩", sub:"Hillsborough St",             lat:35.78818, lng:-78.66916 },
+  { name:"Tin Roof",             cat:"bar", emoji:"🎸", sub:"Glenwood South",              lat:35.78430, lng:-78.64724 },
+  { name:"Hibernian",            cat:"bar", emoji:"☘️", sub:"Glenwood South",              lat:35.78480, lng:-78.64755 },
+  { name:"Lucky B Sports Pub",   cat:"bar", emoji:"🍀", sub:"Glenwood South",              lat:35.78598, lng:-78.64805 },
+  { name:"Napper Tandy's",       cat:"bar", emoji:"🍻", sub:"Glenwood South",              lat:35.78568, lng:-78.64715 },
+  { name:"Cornerstone Tavern",   cat:"bar", emoji:"🍺", sub:"Glenwood South",              lat:35.78765, lng:-78.64745 },
+  { name:"Raleigh Beer Garden",  cat:"bar", emoji:"🌳", sub:"Glenwood South",              lat:35.78820, lng:-78.64698 },
+  { name:"Boxcar Bar + Arcade",  cat:"bar", emoji:"🕹️", sub:"Downtown · arcade games",     lat:35.77593, lng:-78.64501 },
+  { name:"Legends Nightclub",    cat:"bar", emoji:"🪩", sub:"Downtown",                    lat:35.77862, lng:-78.64480 },
+  { name:"Kings",                cat:"bar", emoji:"🎤", sub:"Downtown · live shows",       lat:35.77714, lng:-78.63981 },
+
+  /* --- greek life (verified from OSM) --- */
+  { name:"Greek Village",         cat:"greek", emoji:"🏛️", sub:"Frat & sorority houses · Varsity Dr", lat:35.78037, lng:-78.68082 },
+  { name:"Fraternity Court West", cat:"greek", emoji:"🏛️", sub:"Greek Village west side",  lat:35.78153, lng:-78.68115 },
+  { name:"Greek Village Townhomes", cat:"greek", emoji:"🏛️", sub:"Greek Village",          lat:35.78096, lng:-78.68003 },
+  { name:"Sigma Pi House",        cat:"greek", emoji:"🏛️", sub:"Off campus · Avent Ferry", lat:35.76524, lng:-78.69852 },
 
   /* --- health & landmarks --- */
   { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78464, lng:-78.67522 },
@@ -779,7 +824,7 @@ function feedBella(){
   if(!myPos){ pendingHungry=true; startLocate(); toast('hold on, finding u first… 🛰️'); return; }
   pendingHungry=false;
   let best=null, bd=Infinity;
-  allPlaces().filter(p=>p.cat==='dining').forEach(p=>{
+  allPlaces().filter(p=>p.cat==='dining'||p.cat==='food').forEach(p=>{
     const d=haversine(myPos,[p.lat,p.lng]);
     if(d<bd){ bd=d; best=p; }
   });
