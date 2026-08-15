@@ -174,6 +174,47 @@
   }
   #enableCompassBtn.on { display:block; }
 
+  /* ============ next-class card ============ */
+  #nextCard {
+    display:none; position:absolute; top:calc(10px + env(safe-area-inset-top));
+    left:12px; right:12px; z-index:1100;
+    background:#fff; border-radius:16px; padding:12px 14px;
+    box-shadow:0 4px 16px rgba(0,0,0,.28);
+    align-items:center; gap:10px;
+  }
+  #nextCard.on { display:flex; }
+  #ncTitle { font-size:16px; font-weight:900; color:#111; }
+  #ncSub { font-size:13px; color:#888; font-weight:600; margin-top:2px; }
+  #ncLeave { font-size:13px; font-weight:800; color:#1a9c4b; margin-top:2px; }
+  #ncGo { margin-left:auto; flex:0 0 auto; border:none; border-radius:12px; background:var(--red); color:#fff; font-size:15px; font-weight:900; padding:13px 20px; }
+  #ncX { flex:0 0 auto; border:none; background:none; color:#bbb; font-size:18px; font-weight:900; padding:6px; }
+
+  /* ============ I'M LOST ============ */
+  #lostBtn {
+    position:absolute; left:14px; bottom:calc(var(--nav-h) + 84px); z-index:1100;
+    height:52px; padding:0 18px; border-radius:26px; border:none;
+    background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3);
+    font-size:15px; font-weight:900; color:var(--red);
+  }
+  #lostSheet {
+    display:none; position:absolute; inset:0; z-index:4000;
+    background:rgba(0,0,0,.65);
+    align-items:center; justify-content:center; padding:26px;
+  }
+  #lostSheet.on { display:flex; }
+  #lostCard {
+    background:#fff; border-radius:22px; padding:24px 20px; width:100%; max-width:360px; text-align:center;
+  }
+  #lostCard h2 { font-size:23px; font-weight:900; color:#111; margin-bottom:6px; }
+  #lostWhere { font-size:15px; color:#666; font-weight:600; margin-bottom:18px; line-height:1.4; }
+  .lostOpt {
+    display:block; width:100%; padding:15px; border:none; border-radius:14px;
+    font-size:16px; font-weight:900; margin-bottom:10px;
+  }
+  #lostHome { background:var(--red); color:#fff; }
+  #lostClass { background:#fff3f3; color:var(--red); border:1.5px solid #f5caca; }
+  #lostClose { background:#f1f1f1; color:#777; }
+
   /* ============ onboarding ============ */
   #welcome {
     position:absolute; inset:0; z-index:5000;
@@ -216,7 +257,30 @@
   <button id="endBtn">End</button>
 </div>
 <button id="locBtn" title="Find me">📍</button>
+<button id="lostBtn">im lost 😭</button>
 <div id="toast"></div>
+
+<!-- next class up card -->
+<div id="nextCard">
+  <div>
+    <div id="ncTitle"></div>
+    <div id="ncSub"></div>
+    <div id="ncLeave"></div>
+  </div>
+  <button id="ncGo">Go</button>
+  <button id="ncX">✕</button>
+</div>
+
+<!-- i'm lost overlay -->
+<div id="lostSheet">
+  <div id="lostCard">
+    <h2>ur okay baby girl 💕</h2>
+    <div id="lostWhere">let me see where u are…</div>
+    <button class="lostOpt" id="lostHome">🏠 take me home</button>
+    <button class="lostOpt" id="lostClass">🎓 take me to my next class</button>
+    <button class="lostOpt" id="lostClose">im good actually</button>
+  </div>
+</div>
 
 <!-- where-to sheet -->
 <div id="whereSheet">
@@ -293,15 +357,18 @@ const CATS = {
 };
 
 const PLACES = [
-  /* --- her class buildings --- */
-  { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78634, lng:-78.66785 },
+  /* --- her class buildings ---
+     door: = actual mapped entrance from OSM; routing targets the door
+     so she isn't walked around the building. Buildings without doors
+     in OSM (Bostian, Caldwell, 1911, SAS) route to the center. */
+  { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78634, lng:-78.66785, door:{lat:35.78639,lng:-78.66804} },
   { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78685, lng:-78.66579 },
   { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78654, lng:-78.66733 },
   { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78747, lng:-78.67181 },
   { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78490, lng:-78.66684 },
 
   /* --- home --- */
-  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269 },
+  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269, door:{lat:35.78524,lng:-78.67265} },
 
   /* --- dorms --- */
   { name:"Metcalf Hall",     cat:"dorm", emoji:"🛏️", sub:"Right next to Carroll",  lat:35.78549, lng:-78.67313 },
@@ -321,21 +388,21 @@ const PLACES = [
   { name:"Wolf Village Apartments", cat:"dorm", emoji:"🐺", sub:"Apartments",       lat:35.78660, lng:-78.68470 },
 
   /* --- dining --- */
-  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766 },
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766, door:{lat:35.78553,lng:-78.67736} },
   { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684 },
   { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958 },
-  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082 },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082, door:{lat:35.78458,lng:-78.67136} },
   { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",       lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
   { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78750, lng:-78.67000 },
-  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial (take Wolfline!)", lat:35.76930, lng:-78.67644 },
+  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial — take the Wolfline 🚌 (25 min walk)", lat:35.76930, lng:-78.67644 },
 
   /* --- fun & rec --- */
-  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250 },
+  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250, door:{lat:35.78345,lng:-78.67138} },
   { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",       lat:35.78352, lng:-78.66991 },
   { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",   lat:35.78511, lng:-78.67452 },
-  { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football (it's a hike)", lat:35.80080, lng:-78.71970 },
+  { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football — Wolfline 🚌 on gamedays, walking is wild", lat:35.80080, lng:-78.71970 },
 
   /* --- health & landmarks --- */
   { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78464, lng:-78.67522 },
@@ -393,6 +460,17 @@ function walkEta(place){
   const m = haversine(myPos,[place.lat,place.lng]) * 1.25;
   return `🚶 ${Math.max(1,Math.ceil(m/80))} min`;
 }
+function walkMins(place){
+  if(!myPos) return null;
+  return Math.max(1,Math.ceil(haversine(myPos,[place.lat,place.lng])*1.25/80));
+}
+function fmt12(min){
+  min = ((min % 1440) + 1440) % 1440;
+  let h = Math.floor(min/60), m = min%60;
+  const ap = h>=12 ? 'pm' : 'am';
+  h = h%12 || 12;
+  return `${h}:${String(m).padStart(2,'0')}${ap}`;
+}
 
 /* ---------- map ---------- */
 const map = L.map('map', { zoomControl:false }).setView([35.7855,-78.6690], 16);
@@ -436,7 +514,8 @@ function showScreen(name) {
     if (needsCompassPerm && !compassGranted) $('enableCompassBtn').classList.add('on');
     updateCompassScreen();
   }
-  if (name==='map') setTimeout(() => map.invalidateSize(), 50);
+  if (name==='map'){ setTimeout(() => map.invalidateSize(), 50); refreshNextCard(); }
+  else $('nextCard').classList.remove('on');
 }
 $('navFood').onclick = () => { showScreen('map'); feedBella(); };
 
@@ -509,7 +588,13 @@ function renderClasses(day){
       d.classList.add('next'); nextFlagged=true;
     }
     const pl=findPlace(cl.b);
-    const eta=pl?walkEta(pl):'';
+    let eta=pl?walkEta(pl):'';
+    /* "leave by" = class start − walk time − 5 min buffer, today's future classes only */
+    if(eta && isToday && nowMin < cl.min){
+      const wm=walkMins(pl);
+      const leave=cl.min - wm - 5;
+      eta += nowMin >= leave ? ' · leave NOW baby girl 😳' : ` · leave by ${fmt12(leave)} ❤️`;
+    }
     d.innerHTML=`
       <div class="time">${cl.t}</div>
       <div>
@@ -526,6 +611,70 @@ function renderClasses(day){
   });
 }
 $('homeBtn').onclick=()=>{ const p=findPlace('Carroll Hall'); if(p){ showScreen('map'); setDestination(p); } };
+
+/* ---------- next class up (auto card on the map) ---------- */
+function nextClassToday(){
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  return (SCHEDULE[today]||[]).find(cl => nowMin < cl.min + 10) || null;
+}
+let ncDismissed = '';
+function refreshNextCard(){
+  const card=$('nextCard');
+  const nc=nextClassToday();
+  const nowMin=new Date().getHours()*60 + new Date().getMinutes();
+  if(dest || !nc || nc.min-nowMin > 90 || ncDismissed === nc.c+nc.t || currentScreen!=='map'){
+    card.classList.remove('on'); return;
+  }
+  $('ncTitle').textContent = nowMin>=nc.min ? `${nc.c} is NOW 😳` : `${nc.c} in ${nc.min-nowMin} min`;
+  $('ncSub').textContent = `${nc.b} · ${nc.r}`;
+  const pl=findPlace(nc.b);
+  if(pl && myPos && nowMin<nc.min){
+    const leave=nc.min - walkMins(pl) - 5;
+    $('ncLeave').textContent = nowMin>=leave ? 'leave NOW baby girl 😳' : `leave by ${fmt12(leave)} ❤️`;
+  } else $('ncLeave').textContent='';
+  card.classList.add('on');
+}
+$('ncGo').onclick=()=>{
+  const nc=nextClassToday();
+  if(!nc) return;
+  const p=findPlace(nc.b);
+  if(p) setDestination({...p, name:`${nc.c} — ${nc.b}`});
+  refreshNextCard();
+};
+$('ncX').onclick=()=>{
+  const nc=nextClassToday();
+  if(nc) ncDismissed = nc.c+nc.t;
+  refreshNextCard();
+};
+setInterval(refreshNextCard, 30000);
+
+/* ---------- I'M LOST ---------- */
+$('lostBtn').onclick=()=>{
+  if(myPos) map.setView(myPos,18); else startLocate();
+  let nearest=null, bd=Infinity;
+  if(myPos) allPlaces().forEach(p=>{
+    const d=haversine(myPos,[p.lat,p.lng]);
+    if(d<bd){ bd=d; nearest=p; }
+  });
+  $('lostWhere').textContent = nearest
+    ? `deep breath. ur right by ${nearest.name} ${nearest.emoji} (${fmtDist(bd)} away)`
+    : 'finding u… give it a sec & tap this again';
+  $('lostClass').style.display = nextClassToday() ? '' : 'none';
+  $('lostSheet').classList.add('on');
+};
+$('lostHome').onclick=()=>{
+  $('lostSheet').classList.remove('on');
+  const p=findPlace('Carroll Hall');
+  if(p){ showScreen('map'); setDestination(p); }
+};
+$('lostClass').onclick=()=>{
+  $('lostSheet').classList.remove('on');
+  const nc=nextClassToday();
+  if(!nc) return;
+  const p=findPlace(nc.b);
+  if(p){ showScreen('map'); setDestination({...p, name:`${nc.c} — ${nc.b}`}); }
+};
+$('lostClose').onclick=()=>$('lostSheet').classList.remove('on');
 
 /* ---------- I'M HUNGRY ---------- */
 function feedBella(){
@@ -558,6 +707,7 @@ function onPosition(pos){
     toast('found u baby girl 💕');
     renderClasses(shownDay);
     renderList($('searchBox').value);
+    refreshNextCard();
   } else {
     myMarker.setLatLng(myPos);
     accCircle.setLatLng(myPos).setRadius(pos.coords.accuracy);
@@ -620,7 +770,7 @@ function getGuideBearing(){
     while(look<routeCoords.length-1 && cumDist[look]-cumDist[best]<15) look++;
     return bearing(myPos, routeCoords[look]);
   }
-  return bearing(myPos, [dest.lat, dest.lng]);
+  return bearing(myPos, dest._t || [dest.lat, dest.lng]);
 }
 
 function updateCompassScreen(){
@@ -655,6 +805,8 @@ function updateCompassScreen(){
 /* ---------- destination + routing ---------- */
 function setDestination(p){
   dest=p;
+  dest._t = p.door ? [p.door.lat, p.door.lng] : [p.lat, p.lng];   // route to the door if we know it
+  if(myPos && haversine(myPos, dest._t) > 1900) toast('lowkey far baby girl — maybe catch the Wolfline 🚌', 4500);
   if(destMarker) map.removeLayer(destMarker);
   destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>`).openPopup();
   clearRoute();
@@ -666,6 +818,7 @@ function setDestination(p){
   $('saveBtn').classList.toggle('on', !!p._unsaved);
   if(!myPos) startLocate(); else { lastRouteFetch=0; fetchRoute(); }
   followMe=true;
+  refreshNextCard();
 }
 function clearRoute(){
   if(routeLine) map.removeLayer(routeLine);
@@ -678,6 +831,7 @@ $('endBtn').onclick=()=>{
   $('statsBar').classList.remove('on');
   $('wherePill').style.display='';
   if(currentScreen==='compass') updateCompassScreen();
+  refreshNextCard();
 };
 
 async function fetchRoute(){
@@ -685,7 +839,7 @@ async function fetchRoute(){
   const now=Date.now();
   if(now-lastRouteFetch<8000) return;
   lastRouteFetch=now;
-  const url=`https://routing.openstreetmap.de/routed-foot/route/v1/foot/${myPos[1]},${myPos[0]};${dest.lng},${dest.lat}?overview=full&geometries=geojson&steps=true`;
+  const url=`https://routing.openstreetmap.de/routed-foot/route/v1/foot/${myPos[1]},${myPos[0]};${dest._t[1]},${dest._t[0]}?overview=full&geometries=geojson&steps=true`;
   try{
     const res=await fetch(url);
     const data=await res.json();
@@ -712,10 +866,10 @@ async function fetchRoute(){
     map.fitBounds(routeLine.getBounds(),{ padding:[70,70] });
     updateProgress();
   }catch(e){
-    routeCoords=[myPos,[dest.lat,dest.lng]];
-    cumDist=[0, haversine(myPos,[dest.lat,dest.lng])];
+    routeCoords=[myPos,dest._t];
+    cumDist=[0, haversine(myPos,dest._t)];
     totalDist=cumDist[1];
-    maneuvers=[{ at:0, text:'head '+compassWord(bearing(myPos,[dest.lat,dest.lng]))+' 🐺' }];
+    maneuvers=[{ at:0, text:'head '+compassWord(bearing(myPos,dest._t))+' 🐺' }];
     if(routeLine) map.removeLayer(routeLine);
     routeLine=L.polyline(routeCoords,{ color:'#CC0000', weight:5, dashArray:'8 10', opacity:.8 }).addTo(map);
     updateProgress();
@@ -748,7 +902,7 @@ function updateProgress(){
   $('distVal').textContent=fmtDist(remainingDist);
   $('etaVal').textContent=Math.max(1,Math.ceil(remainingDist/80))+' min';
 
-  if(remainingDist<18 || haversine(myPos,[dest.lat,dest.lng])<18){
+  if(remainingDist<18 || haversine(myPos,dest._t)<18){
     $('instr').textContent="u made it!! 🎉🐺";
     $('instrSub').textContent='so proud of u baby girl 💕';
     if(currentScreen==='compass') updateCompassScreen();
@@ -792,6 +946,7 @@ if(localStorage.getItem('onboarded')){
   startLocate();
   if(!needsCompassPerm) requestCompass();
 }
+refreshNextCard();
 $('startBtn').onclick=()=>{
   localStorage.setItem('onboarded','1');
   $('welcome').classList.add('off');
