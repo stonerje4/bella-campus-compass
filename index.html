@@ -2,19 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#CC0000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Campus Compass">
 <title>Bella's Campus Compass 🐺</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; overflow:hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  html, body { height:100%; overflow:hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overscroll-behavior:none; }
   #map { position:absolute; inset:0; z-index:1; }
 
   /* ---------- top instruction banner ---------- */
   #banner {
     position:absolute; top:0; left:0; right:0; z-index:1000;
-    background:#CC0000; color:#fff; padding:12px 14px;
+    background:#CC0000; color:#fff;
+    padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
     display:none; align-items:center; gap:12px;
     box-shadow:0 2px 10px rgba(0,0,0,.35);
   }
@@ -33,10 +37,12 @@
     background:#fff; border-radius:18px 18px 0 0;
     box-shadow:0 -4px 20px rgba(0,0,0,.25);
     padding:10px 14px calc(14px + env(safe-area-inset-bottom));
-    max-height:60%; display:flex; flex-direction:column;
+    max-height:62%; display:flex; flex-direction:column;
+    transition:max-height .25s ease;
   }
-  #grab { width:42px; height:5px; border-radius:3px; background:#ddd; margin:0 auto 10px; }
-  #statsRow { display:none; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  #sheet.mini { max-height:150px; }
+  #grab { width:42px; height:5px; border-radius:3px; background:#ddd; margin:0 auto 10px; flex:0 0 auto; }
+  #statsRow { display:none; align-items:center; justify-content:space-between; margin-bottom:10px; flex:0 0 auto; }
   #statsRow.on { display:flex; }
   .stat { text-align:center; flex:1; }
   .stat .big { font-size:22px; font-weight:800; color:#111; }
@@ -45,37 +51,84 @@
     background:#eee; color:#CC0000; border:none; border-radius:12px;
     font-size:14px; font-weight:700; padding:10px 14px;
   }
+
+  /* tabs */
+  #tabs { display:flex; gap:8px; margin-bottom:10px; flex:0 0 auto; }
+  .tab {
+    flex:1; padding:11px 0; border:none; border-radius:12px;
+    font-size:15px; font-weight:800; background:#f1f1f1; color:#666;
+  }
+  .tab.on { background:#CC0000; color:#fff; }
+
+  #panelScroll { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
+
+  /* schedule panel */
+  #homeBtn {
+    width:100%; padding:13px; border:none; border-radius:12px;
+    background:#fff3f3; color:#CC0000; font-size:15px; font-weight:800;
+    margin-bottom:10px; border:1.5px solid #f5caca;
+  }
+  #daySel {
+    width:100%; padding:12px 14px; font-size:16px; font-weight:700;
+    border:2px solid #eee; border-radius:12px; background:#f7f7f7 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23888' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;
+    -webkit-appearance:none; appearance:none; color:#222; margin-bottom:8px;
+  }
+  .cls {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 8px; border-bottom:1px solid #f2f2f2;
+  }
+  .cls .time { font-size:14px; font-weight:800; color:#CC0000; width:64px; flex:0 0 64px; }
+  .cls .course { font-size:15px; font-weight:700; color:#222; }
+  .cls .where { font-size:13px; color:#888; }
+  .cls .go {
+    margin-left:auto; flex:0 0 auto; border:none; border-radius:10px;
+    background:#CC0000; color:#fff; font-size:14px; font-weight:800; padding:10px 16px;
+  }
+  .badge {
+    font-size:10px; font-weight:900; color:#fff; background:#1a9c4b;
+    border-radius:6px; padding:2px 6px; margin-left:6px; vertical-align:2px;
+  }
+  .noclass { text-align:center; color:#999; padding:24px 0 12px; font-size:15px; }
+
+  /* places panel */
   #searchBox {
     width:100%; padding:12px 14px; font-size:16px;
-    border:2px solid #eee; border-radius:12px; outline:none; background:#f7f7f7;
+    border:2px solid #eee; border-radius:12px; outline:none; background:#f7f7f7; margin-bottom:8px;
   }
   #searchBox:focus { border-color:#CC0000; background:#fff; }
-  #placeList { overflow-y:auto; margin-top:8px; flex:1; }
+  #chips { display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px; flex:0 0 auto; scrollbar-width:none; }
+  #chips::-webkit-scrollbar { display:none; }
+  .chip {
+    flex:0 0 auto; border:none; border-radius:20px; padding:8px 14px;
+    font-size:13px; font-weight:700; background:#f1f1f1; color:#555; white-space:nowrap;
+  }
+  .chip.on { background:#CC0000; color:#fff; }
   .place {
     display:flex; align-items:center; gap:10px;
     padding:11px 6px; border-bottom:1px solid #f2f2f2; cursor:pointer;
   }
   .place:active { background:#faf0f0; }
-  .place .emoji { font-size:22px; width:30px; text-align:center; }
+  .place .emoji { font-size:22px; width:30px; text-align:center; flex:0 0 30px; }
   .place .nm { font-size:15px; font-weight:600; color:#222; }
   .place .cat { font-size:12px; color:#999; }
+
   #locBtn {
-    position:absolute; right:12px; z-index:1000; bottom:calc(45% + 20px);
+    position:absolute; right:12px; z-index:1000; bottom:calc(63% + 16px);
     width:52px; height:52px; border-radius:50%; border:none;
     background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3);
     font-size:24px; display:flex; align-items:center; justify-content:center;
   }
   #compassBtn {
-    display:none; position:absolute; right:12px; z-index:1000; bottom:calc(45% + 84px);
+    display:none; position:absolute; right:12px; z-index:1000; bottom:calc(63% + 80px);
     width:52px; height:52px; border-radius:50%; border:none;
     background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3); font-size:24px;
   }
   #toast {
-    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:2000;
+    position:absolute; top:calc(70px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:2000;
     background:rgba(0,0,0,.8); color:#fff; padding:10px 18px; border-radius:20px;
     font-size:14px; display:none; max-width:85%; text-align:center;
   }
-  #hint { font-size:12px; color:#aaa; text-align:center; padding-top:8px; }
+  #hint { font-size:12px; color:#aaa; text-align:center; padding-top:8px; flex:0 0 auto; }
   .my-dot {
     width:18px; height:18px; border-radius:50%;
     background:#1a73e8; border:3px solid #fff;
@@ -116,47 +169,122 @@
     <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
     <button id="endBtn">End</button>
   </div>
-  <input id="searchBox" type="text" placeholder="Where to, Bella? 🐺" autocomplete="off">
-  <div id="placeList"></div>
+
+  <div id="tabs">
+    <button class="tab on" id="tabSched">📅 My Classes</button>
+    <button class="tab" id="tabPlaces">🗺️ Campus</button>
+  </div>
+
+  <div id="panelScroll">
+    <!-- schedule panel -->
+    <div id="panelSched">
+      <button id="homeBtn">🏠 Take me home (Carroll Hall)</button>
+      <select id="daySel"></select>
+      <div id="classList"></div>
+    </div>
+
+    <!-- places panel -->
+    <div id="panelPlaces" style="display:none">
+      <input id="searchBox" type="text" placeholder="Where to, Bella? 🐺" autocomplete="off">
+      <div id="chips"></div>
+      <div id="placeList"></div>
+    </div>
+  </div>
   <div id="hint">Tip: press &amp; hold anywhere on the map to navigate there</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ==========================================================================
-   EDIT YOUR PLACES HERE!
-   Coordinates are close but approximate — if a pin looks off, press & hold
-   the real spot on the map, tap "＋ Save spot", and it's stored on the phone.
+   PLACES — edit or add here. Coordinates are close but approximate; if a pin
+   looks off, press & hold the real spot on the map and "＋ Save spot".
+   cats: class | dorm | dining | study | fun | health | landmark
    ========================================================================== */
+const CATS = {
+  class:    { label:"🎓 Her Classes", chip:"🎓 Classes" },
+  dorm:     { label:"🏠 Dorms",       chip:"🏠 Dorms" },
+  dining:   { label:"🍽️ Dining",      chip:"🍽️ Dining" },
+  study:    { label:"📚 Study",       chip:"📚 Study" },
+  fun:      { label:"🎉 Fun & Rec",   chip:"🎉 Fun" },
+  health:   { label:"🏥 Health",      chip:"🏥 Health" },
+  landmark: { label:"⭐ Landmarks",   chip:"⭐ Landmarks" },
+  saved:    { label:"💾 Saved",       chip:"💾 Saved" },
+};
+
 const PLACES = [
-  { name:"Talley Student Union",     cat:"Food & hangout",  emoji:"🍔", lat:35.78381, lng:-78.67078 },
-  { name:"D.H. Hill Jr. Library",    cat:"Library · North", emoji:"📚", lat:35.78770, lng:-78.66950 },
-  { name:"Hunt Library",             cat:"Library · Centennial", emoji:"🤖", lat:35.77014, lng:-78.67655 },
-  { name:"Memorial Belltower",       cat:"Landmark",        emoji:"🔔", lat:35.78617, lng:-78.66337 },
-  { name:"Carmichael Gym",           cat:"Gym & rec",       emoji:"💪", lat:35.78340, lng:-78.67450 },
-  { name:"Reynolds Coliseum",        cat:"Basketball",      emoji:"🏀", lat:35.78454, lng:-78.66790 },
-  { name:"Fountain Dining Hall",     cat:"Dining · West",   emoji:"🍽️", lat:35.78660, lng:-78.67580 },
-  { name:"Clark Dining Hall",        cat:"Dining · East",   emoji:"🥞", lat:35.78850, lng:-78.66430 },
-  { name:"SAS Hall",                 cat:"Math & stats classes", emoji:"➗", lat:35.78730, lng:-78.67350 },
-  { name:"Poe Hall",                 cat:"Education & psych",    emoji:"🧠", lat:35.78530, lng:-78.66440 },
-  { name:"Withers Hall",             cat:"Classes",         emoji:"🏛️", lat:35.78630, lng:-78.66540 },
-  { name:"Dabney Hall",              cat:"Chemistry",       emoji:"🧪", lat:35.78650, lng:-78.66850 },
-  { name:"Witherspoon Student Center", cat:"Campus life",   emoji:"🎬", lat:35.78320, lng:-78.67560 },
-  { name:"Student Health Center",    cat:"Health",          emoji:"🏥", lat:35.78330, lng:-78.67290 },
-  { name:"Wolf Village Apartments",  cat:"Housing",         emoji:"🏠", lat:35.78230, lng:-78.68050 },
-  { name:"Carter-Finley Stadium",    cat:"Football 🏈",     emoji:"🏈", lat:35.80070, lng:-78.71950 },
+  /* --- her class buildings (the important ones!) --- */
+  { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78630, lng:-78.66540 },
+  { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78600, lng:-78.66420 },
+  { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78570, lng:-78.66680 },
+  { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78660, lng:-78.66700 },
+  { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78730, lng:-78.67350 },
+
+  /* --- home --- */
+  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78380, lng:-78.66900 },
+
+  /* --- dorms / where people live --- */
+  { name:"Bragaw Hall",            cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78310, lng:-78.67680 },
+  { name:"Lee Hall",               cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78060, lng:-78.67400 },
+  { name:"Sullivan Hall",          cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78040, lng:-78.67520 },
+  { name:"Metcalf Hall",           cat:"dorm", emoji:"🛏️", sub:"East campus dorm",    lat:35.78870, lng:-78.66380 },
+  { name:"Bowen Hall",             cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78420, lng:-78.66850 },
+  { name:"Tucker Hall",            cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78530, lng:-78.66960 },
+  { name:"Owen Hall",              cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78500, lng:-78.67010 },
+  { name:"Wolf Village Apartments",cat:"dorm", emoji:"🐺", sub:"Apartments",          lat:35.78230, lng:-78.68050 },
+
+  /* --- dining --- */
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",   lat:35.78660, lng:-78.67580 },
+  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",   lat:35.78850, lng:-78.66430 },
+  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"Near Carmichael",      lat:35.78390, lng:-78.67210 },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout", lat:35.78381, lng:-78.67078 },
+
+  /* --- study --- */
+  { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78770, lng:-78.66950 },
+  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial (take Wolfline!)", lat:35.77014, lng:-78.67655 },
+
+  /* --- fun & rec --- */
+  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center", lat:35.78340, lng:-78.67450 },
+  { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games", lat:35.78454, lng:-78.66790 },
+  { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more", lat:35.78320, lng:-78.67560 },
+  { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football (it's a hike)", lat:35.80070, lng:-78.71950 },
+
+  /* --- health & landmarks --- */
+  { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78330, lng:-78.67290 },
+  { name:"Memorial Belltower",    cat:"landmark", emoji:"🔔", sub:"The famous one",        lat:35.78617, lng:-78.66337 },
 ];
 
+/* ==========================================================================
+   BELLA'S FALL SCHEDULE  (day: 1=Mon … 5=Fri)
+   ========================================================================== */
+const SCHEDULE = {
+  1: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
+       { t:"11:45 AM", min:705, c:"WLSP 201", b:"Withers Hall",  r:"Room 130"  } ],
+  2: [ { t:"8:30 AM",  min:510, c:"HSS 120",  b:"Caldwell Hall", r:"Room G106" },
+       { t:"11:45 AM", min:705, c:"PSY 230",  b:"1911 Building", r:"Room 111"  },
+       { t:"1:30 PM",  min:810, c:"PSY 311",  b:"Bostian Hall",  r:"Room 3712" } ],
+  3: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
+       { t:"11:45 AM", min:705, c:"WLSP 201", b:"Withers Hall",  r:"Room 130"  } ],
+  4: [ { t:"11:45 AM", min:705, c:"PSY 230",  b:"1911 Building", r:"Room 111"  },
+       { t:"1:30 PM",  min:810, c:"PSY 311",  b:"Bostian Hall",  r:"Room 3712" },
+       { t:"6:00 PM",  min:1080,c:"ST 311",   b:"SAS Hall",      r:"Room TBA — check portal!" } ],
+  5: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
+       { t:"11:45 AM", min:705, c:"WLSP 201", b:"Withers Hall",  r:"Room 130"  },
+       { t:"12:50 PM", min:770, c:"ST 311",   b:"SAS Hall",      r:"Room 2102" } ],
+};
+const DAYNAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
 /* ---------- map setup ---------- */
-const NCSU = [35.7847, -78.6699];
-const map = L.map('map', { zoomControl:false }).setView(NCSU, 15);
+const NCSU = [35.7855, -78.6680];
+const map = L.map('map', { zoomControl:false }).setView(NCSU, 16);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 const savedPlaces = JSON.parse(localStorage.getItem('bellaSpots') || '[]');
+savedPlaces.forEach(p => p.cat = 'saved');
 const allPlaces = () => PLACES.concat(savedPlaces);
+const findPlace = name => allPlaces().find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
 
 const placeMarkers = L.layerGroup().addTo(map);
 function drawPlaceMarkers() {
@@ -173,7 +301,7 @@ drawPlaceMarkers();
 let myPos = null, myMarker = null, accCircle = null;
 let dest = null, destMarker = null;
 let routeLine = null, routeCoords = [], cumDist = [], totalDist = 0, maneuvers = [];
-let heading = null, lastRouteFetch = 0, watchId = null, followMe = true, droppedPin = null;
+let heading = null, lastRouteFetch = 0, watchId = null, followMe = true;
 
 const $ = id => document.getElementById(id);
 function toast(msg, ms=3000) {
@@ -203,16 +331,100 @@ function compassWord(b) {
   return ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8];
 }
 
-/* ---------- place list UI ---------- */
+/* ---------- tabs ---------- */
+$('tabSched').onclick = () => switchTab(true);
+$('tabPlaces').onclick = () => switchTab(false);
+function switchTab(sched) {
+  $('tabSched').classList.toggle('on', sched);
+  $('tabPlaces').classList.toggle('on', !sched);
+  $('panelSched').style.display = sched ? '' : 'none';
+  $('panelPlaces').style.display = sched ? 'none' : '';
+}
+
+/* ---------- schedule UI ---------- */
+const today = new Date().getDay();
+(function buildDaySel() {
+  const sel = $('daySel');
+  for (let d = 1; d <= 5; d++) {
+    const o = document.createElement('option');
+    o.value = d;
+    o.textContent = (d === today ? '📅 Today — ' : '') + DAYNAMES[d];
+    sel.appendChild(o);
+  }
+  sel.value = (today >= 1 && today <= 5) ? today : 1;
+  sel.onchange = () => renderClasses(+sel.value);
+  renderClasses(+sel.value);
+})();
+
+function renderClasses(day) {
+  const list = $('classList');
+  list.innerHTML = '';
+  const classes = SCHEDULE[day] || [];
+  if (!classes.length) {
+    list.innerHTML = '<div class="noclass">No classes — enjoy it 😌</div>';
+    return;
+  }
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const isToday = day === today;
+  let nextFlagged = false;
+  classes.forEach(cl => {
+    const d = document.createElement('div');
+    d.className = 'cls';
+    let badge = '';
+    if (isToday && !nextFlagged && nowMin < cl.min + 50) {
+      badge = nowMin >= cl.min ? '<span class="badge" style="background:#e67e22">NOW</span>' : '<span class="badge">NEXT</span>';
+      nextFlagged = true;
+    }
+    d.innerHTML = `
+      <div class="time">${cl.t}</div>
+      <div>
+        <div class="course">${cl.c}${badge}</div>
+        <div class="where">${cl.b} · ${cl.r}</div>
+      </div>
+      <button class="go">Go</button>`;
+    d.querySelector('.go').onclick = () => {
+      const p = findPlace(cl.b);
+      if (p) setDestination({ ...p, name:`${cl.c} — ${cl.b}` });
+    };
+    list.appendChild(d);
+  });
+}
+$('homeBtn').onclick = () => {
+  const p = findPlace('Carroll Hall');
+  if (p) setDestination(p);
+};
+
+/* ---------- places UI ---------- */
+let activeChip = 'all';
+(function buildChips() {
+  const chips = $('chips');
+  const mk = (key, label) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (key === 'all' ? ' on' : '');
+    b.textContent = label;
+    b.onclick = () => {
+      activeChip = key;
+      chips.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      renderList($('searchBox').value);
+    };
+    chips.appendChild(b);
+  };
+  mk('all', 'All');
+  Object.keys(CATS).forEach(k => mk(k, CATS[k].chip));
+})();
+
 function renderList(filter='') {
   const f = filter.trim().toLowerCase();
   $('placeList').innerHTML = '';
   allPlaces()
-    .filter(p => !f || p.name.toLowerCase().includes(f) || (p.cat||'').toLowerCase().includes(f))
+    .filter(p => activeChip === 'all' || p.cat === activeChip)
+    .filter(p => !f || p.name.toLowerCase().includes(f) || (p.sub||'').toLowerCase().includes(f))
     .forEach(p => {
       const d = document.createElement('div');
       d.className = 'place';
-      d.innerHTML = `<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.cat||''}</div></div>`;
+      d.innerHTML = `<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||CATS[p.cat]?.label||''}</div></div>`;
       d.onclick = () => setDestination(p);
       $('placeList').appendChild(d);
     });
@@ -226,7 +438,7 @@ function startLocate() {
   if (watchId !== null) return;
   toast('Finding you… 🛰️');
   watchId = navigator.geolocation.watchPosition(onPosition, err => {
-    toast(err.code === 1 ? 'Location is blocked — allow it in your browser settings 🙏' : 'Hmm, GPS is being weird. Try stepping outside?');
+    toast(err.code === 1 ? 'Location is blocked — allow it in Settings → Safari → Location 🙏' : 'Hmm, GPS is being weird. Try stepping outside?');
   }, { enableHighAccuracy:true, maximumAge:2000, timeout:20000 });
 }
 function onPosition(pos) {
@@ -250,7 +462,7 @@ $('locBtn').onclick = () => {
 };
 map.on('dragstart', () => followMe = false);
 
-/* ---------- compass (iPhone needs a permission tap) ---------- */
+/* ---------- compass (iPhone needs one permission tap) ---------- */
 function onOrient(e) {
   if (e.webkitCompassHeading !== undefined) heading = e.webkitCompassHeading;
   else if (e.absolute && e.alpha !== null) heading = 360 - e.alpha;
@@ -273,12 +485,14 @@ function setDestination(p) {
   clearRoute();
   $('banner').classList.add('on');
   $('statsRow').classList.add('on');
-  $('instr').textContent = `Let's go to ${p.name}!`;
+  $('sheet').classList.add('mini');
+  $('instr').textContent = `Let's go: ${p.name}`;
   $('instrSub').textContent = myPos ? 'Getting your walking route…' : 'Tap 📍 so I can find you first';
   $('saveBtn').classList.toggle('on', !!p._unsaved);
-  if (!myPos) startLocate(); else fetchRoute();
+  if (!myPos) startLocate(); else { lastRouteFetch = 0; fetchRoute(); }
   followMe = true;
 }
+$('grab').onclick = () => $('sheet').classList.toggle('mini');
 function clearRoute() {
   if (routeLine) map.removeLayer(routeLine);
   routeLine = null; routeCoords = []; cumDist = []; maneuvers = []; totalDist = 0;
@@ -288,6 +502,7 @@ $('endBtn').onclick = () => {
   if (destMarker) { map.removeLayer(destMarker); destMarker = null; }
   $('banner').classList.remove('on');
   $('statsRow').classList.remove('on');
+  $('sheet').classList.remove('mini');
 };
 
 async function fetchRoute() {
@@ -319,7 +534,7 @@ async function fetchRoute() {
     }));
     if (routeLine) map.removeLayer(routeLine);
     routeLine = L.polyline(routeCoords, { color:'#CC0000', weight:6, opacity:.85, lineJoin:'round' }).addTo(map);
-    map.fitBounds(routeLine.getBounds(), { padding:[60,60] });
+    map.fitBounds(routeLine.getBounds(), { padding:[70,70] });
     updateProgress();
   } catch (e) {
     // fallback: straight line + compass guidance
@@ -352,8 +567,7 @@ function updateProgress() {
     const d = haversine(myPos, routeCoords[i]);
     if (d < bd) { bd = d; best = i; }
   }
-  // off route? re-route
-  if (bd > 45 && Date.now() - lastRouteFetch > 10000) { fetchRoute(); return; }
+  if (bd > 45 && Date.now() - lastRouteFetch > 10000) { lastRouteFetch = 0; fetchRoute(); return; }
 
   const along = cumDist[best];
   const remaining = Math.max(0, totalDist - along) + Math.min(bd, 30);
@@ -365,7 +579,6 @@ function updateProgress() {
     $('instrSub').textContent = 'Proud of you 💛';
     return;
   }
-  // next maneuver ahead of us
   let next = null;
   for (const mv of maneuvers) if (mv.at > along + 8) { next = mv; break; }
   if (next) {
@@ -375,7 +588,6 @@ function updateProgress() {
     $('instr').textContent = 'Keep going — almost there!';
     $('instrSub').textContent = fmtDist(remaining) + ' left';
   }
-  // arrow: direction to a point ~15m ahead on the route, relative to phone heading
   let look = best;
   while (look < routeCoords.length-1 && cumDist[look] - along < 15) look++;
   const b = bearing(myPos, routeCoords[look]);
@@ -385,15 +597,14 @@ function updateProgress() {
 
 /* ---------- long-press to drop a pin ---------- */
 map.on('contextmenu', e => {
-  droppedPin = { name:'Dropped pin', cat:'Custom spot', emoji:'📍',
-                 lat:e.latlng.lat, lng:e.latlng.lng, _unsaved:true };
-  setDestination(droppedPin);
+  setDestination({ name:'Dropped pin', cat:'saved', emoji:'📍',
+                   lat:e.latlng.lat, lng:e.latlng.lng, _unsaved:true });
 });
 $('saveBtn').onclick = () => {
   if (!dest || !dest._unsaved) return;
-  const name = prompt('Name this spot:', 'My dorm');
+  const name = prompt('Name this spot:', 'My spot');
   if (!name) return;
-  const p = { name, cat:'Saved spot ⭐', emoji:'⭐', lat:dest.lat, lng:dest.lng };
+  const p = { name, cat:'saved', sub:'Saved spot ⭐', emoji:'⭐', lat:dest.lat, lng:dest.lng };
   savedPlaces.push(p);
   localStorage.setItem('bellaSpots', JSON.stringify(savedPlaces));
   dest = p; $('saveBtn').classList.remove('on');
