@@ -102,6 +102,7 @@
   .place .emoji { font-size:22px; width:30px; text-align:center; flex:0 0 30px; }
   .place .nm { font-size:15px; font-weight:700; color:#222; }
   .place .cat { font-size:12px; color:#999; }
+  .place .eta { margin-left:auto; flex:0 0 auto; font-size:13px; font-weight:800; color:#1a9c4b; }
   #hint { font-size:12px; color:#aaa; text-align:center; padding-top:8px; flex:0 0 auto; }
 
   /* ============ full screens (classes / compass) ============ */
@@ -140,6 +141,7 @@
   .cls .time { font-size:14px; font-weight:900; color:var(--red); width:66px; flex:0 0 66px; }
   .cls .course { font-size:16px; font-weight:800; color:#222; }
   .cls .where { font-size:13px; color:#888; margin-top:1px; }
+  .cls .eta { font-size:12px; font-weight:800; color:#1a9c4b; margin-top:2px; }
   .cls .go { margin-left:auto; flex:0 0 auto; border:none; border-radius:12px; background:var(--red); color:#fff; font-size:14px; font-weight:900; padding:12px 18px; }
   .badge { font-size:10px; font-weight:900; color:#fff; background:#1a9c4b; border-radius:6px; padding:2px 6px; margin-left:6px; vertical-align:2px; }
   .noclass { text-align:center; color:#999; padding:30px 0; font-size:16px; font-weight:600; }
@@ -384,6 +386,13 @@ function fmtDist(m) {
   return ft<950 ? Math.max(10,Math.round(ft/10)*10)+' ft' : (m/1609.34).toFixed(1)+' mi';
 }
 function compassWord(b){ return ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8]; }
+/* estimated walk time from where she's standing: straight-line dist x1.25
+   (paths aren't straight) at ~3 mph. Real routed time replaces it on Go. */
+function walkEta(place){
+  if(!myPos) return '';
+  const m = haversine(myPos,[place.lat,place.lng]) * 1.25;
+  return `🚶 ${Math.max(1,Math.ceil(m/80))} min`;
+}
 
 /* ---------- map ---------- */
 const map = L.map('map', { zoomControl:false }).setView([35.7855,-78.6690], 16);
@@ -459,7 +468,8 @@ function renderList(filter=''){
     .forEach(p=>{
       const d=document.createElement('div');
       d.className='place';
-      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||''}</div></div>`;
+      const eta=walkEta(p);
+      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||''}</div></div>${eta?`<div class="eta">${eta}</div>`:''}`;
       d.onclick=()=>{ $('whereSheet').classList.remove('on'); setDestination(p); };
       $('placeList').appendChild(d);
     });
@@ -498,11 +508,14 @@ function renderClasses(day){
       badge = nowMin>=cl.min ? '<span class="badge" style="background:#e67e22">NOW</span>' : '<span class="badge">NEXT</span>';
       d.classList.add('next'); nextFlagged=true;
     }
+    const pl=findPlace(cl.b);
+    const eta=pl?walkEta(pl):'';
     d.innerHTML=`
       <div class="time">${cl.t}</div>
       <div>
         <div class="course">${cl.c}${badge}</div>
         <div class="where">${cl.b} · ${cl.r}</div>
+        ${eta?`<div class="eta">${eta} from u rn</div>`:''}
       </div>
       <button class="go">Go</button>`;
     d.querySelector('.go').onclick=()=>{
@@ -543,6 +556,8 @@ function onPosition(pos){
     accCircle=L.circle(myPos,{ radius:pos.coords.accuracy, color:'#1a73e8', weight:1, fillOpacity:.08 }).addTo(map);
     map.setView(myPos,17);
     toast('found u! 🫵🐺');
+    renderClasses(shownDay);
+    renderList($('searchBox').value);
   } else {
     myMarker.setLatLng(myPos);
     accCircle.setLatLng(myPos).setRadius(pos.coords.accuracy);
@@ -616,7 +631,9 @@ function updateCompassScreen(){
     $('destArrow').classList.add('on');
     $('destArrow').style.transform=`rotate(${h===null?gb:(gb-h+360)%360}deg)`;
     $('compassDist').classList.add('on');
-    $('compassDist').textContent = remainingDist!==null ? fmtDist(remainingDist) : '…';
+    $('compassDist').textContent = remainingDist!==null
+      ? `${fmtDist(remainingDist)} · ${Math.max(1,Math.ceil(remainingDist/80))} min`
+      : '…';
     $('compassHeadline').textContent = `➡️ ${dest.name}`;
     $('compassSub').textContent = h===null
       ? 'arrow = map direction (turn compass on for real-time 🧭)'
@@ -787,6 +804,13 @@ setInterval(()=>{
   if(dest && routeCoords.length) updateProgress();
   else if(currentScreen==='compass') updateCompassScreen();
 }, 2000);
+
+/* keep the "X min from u" estimates fresh as she moves around */
+setInterval(()=>{
+  if(!myPos) return;
+  if(currentScreen==='classes') renderClasses(shownDay);
+  if($('whereSheet').classList.contains('on')) renderList($('searchBox').value);
+}, 20000);
 </script>
 </body>
 </html>
