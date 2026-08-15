@@ -215,6 +215,29 @@
   #lostClass { background:#fff3f3; color:var(--red); border:1.5px solid #f5caca; }
   #lostClose { background:#f1f1f1; color:#777; }
 
+  /* ============ pics of us ============ */
+  #usBtn {
+    position:absolute; right:14px; bottom:calc(var(--nav-h) + 148px); z-index:1100;
+    width:52px; height:52px; border-radius:50%; border:none;
+    background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3); font-size:22px;
+  }
+  #picOverlay {
+    display:none; position:absolute; inset:0; z-index:4500;
+    background:rgba(0,0,0,.72);
+    align-items:center; justify-content:center; padding:30px;
+  }
+  #picOverlay.on { display:flex; }
+  #polaroid {
+    background:#fff; padding:14px 14px 18px; border-radius:6px;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+    transform:rotate(-2.5deg); max-width:88%;
+    animation:polIn .35s ease;
+  }
+  @keyframes polIn { from { transform:rotate(-2.5deg) scale(.7); opacity:0; } to { transform:rotate(-2.5deg) scale(1); opacity:1; } }
+  #polImg { display:block; width:100%; max-height:55vh; object-fit:contain; border-radius:3px; }
+  #polCap { text-align:center; font-size:19px; font-weight:800; color:#333; margin-top:12px; }
+  #polHint { text-align:center; font-size:12px; color:#bbb; margin-top:4px; }
+
   /* ============ onboarding ============ */
   #welcome {
     position:absolute; inset:0; z-index:5000;
@@ -258,7 +281,17 @@
 </div>
 <button id="locBtn" title="Find me">📍</button>
 <button id="lostBtn">im lost 😭</button>
+<button id="usBtn" title="pics of us">💕</button>
 <div id="toast"></div>
+
+<!-- polaroid pic of us -->
+<div id="picOverlay">
+  <div id="polaroid">
+    <img id="polImg" alt="us 💕">
+    <div id="polCap"></div>
+    <div id="polHint">tap anywhere to close</div>
+  </div>
+</div>
 
 <!-- next class up card -->
 <div id="nextCard">
@@ -612,6 +645,24 @@ function renderClasses(day){
 }
 $('homeBtn').onclick=()=>{ const p=findPlace('Carroll Hall'); if(p){ showScreen('map'); setDestination(p); } };
 
+/* ---------- pics of us 💕 ---------- */
+const PICS = ['pics/us1.jpg','pics/us2.jpg','pics/us3.jpg','pics/us4.jpg','pics/us5.jpg',
+              'pics/us6.jpg','pics/us7.jpg','pics/us8.jpg','pics/us9.jpg'];
+const CAPTIONS = ['us 💕','miss u baby girl ❤️','ur favorite person 😌','hi pretty girl 💕',
+                  'thinking abt u','love u so much ❤️','ur never walking alone 💕'];
+let picBag = [];
+function randomPic(){
+  if(!picBag.length) picBag = [...PICS].sort(()=>Math.random()-.5);
+  return picBag.pop();
+}
+function showPic(caption){
+  $('polImg').src = randomPic();
+  $('polCap').textContent = caption;
+  $('picOverlay').classList.add('on');
+}
+$('picOverlay').onclick = () => $('picOverlay').classList.remove('on');
+$('usBtn').onclick = () => showPic(CAPTIONS[Math.floor(Math.random()*CAPTIONS.length)]);
+
 /* ---------- next class up (auto card on the map) ---------- */
 function nextClassToday(){
   const nowMin = new Date().getHours()*60 + new Date().getMinutes();
@@ -803,8 +854,10 @@ function updateCompassScreen(){
 }
 
 /* ---------- destination + routing ---------- */
+let arrivedShown=false;
 function setDestination(p){
   dest=p;
+  arrivedShown=false;
   dest._t = p.door ? [p.door.lat, p.door.lng] : [p.lat, p.lng];   // route to the door if we know it
   if(myPos && haversine(myPos, dest._t) > 1900) toast('lowkey far baby girl — maybe catch the Wolfline 🚌', 4500);
   if(destMarker) map.removeLayer(destMarker);
@@ -905,6 +958,7 @@ function updateProgress(){
   if(remainingDist<18 || haversine(myPos,dest._t)<18){
     $('instr').textContent="u made it!! 🎉🐺";
     $('instrSub').textContent='so proud of u baby girl 💕';
+    if(!arrivedShown){ arrivedShown=true; showPic('u made it baby girl 💕'); }
     if(currentScreen==='compass') updateCompassScreen();
     return;
   }

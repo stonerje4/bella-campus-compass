@@ -1,0 +1,5 @@
+# personal files — never publish these
+Screenshot*.png
+IMG_*.png
+sample context.txt
+*.txt
