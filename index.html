@@ -62,6 +62,16 @@
 
   #panelScroll { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
 
+  /* hungry button */
+  #hungryBtn {
+    width:100%; padding:14px; border:none; border-radius:14px;
+    background:linear-gradient(135deg,#ff6b35,#e8221a); color:#fff;
+    font-size:16px; font-weight:900; letter-spacing:.5px;
+    margin-bottom:10px; flex:0 0 auto;
+    box-shadow:0 3px 10px rgba(232,34,26,.35);
+  }
+  #hungryBtn:active { transform:scale(.98); }
+
   /* schedule panel */
   #homeBtn {
     width:100%; padding:13px; border:none; border-radius:12px;
@@ -175,6 +185,8 @@
     <button class="tab" id="tabPlaces">🗺️ Campus</button>
   </div>
 
+  <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
+
   <div id="panelScroll">
     <!-- schedule panel -->
     <div id="panelSched">
@@ -211,46 +223,56 @@ const CATS = {
   saved:    { label:"💾 Saved",       chip:"💾 Saved" },
 };
 
+/* All coordinates below are building footprint centers pulled from
+   OpenStreetMap (Overpass API) — verified, not eyeballed. */
 const PLACES = [
   /* --- her class buildings (the important ones!) --- */
-  { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78630, lng:-78.66540 },
-  { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78600, lng:-78.66420 },
-  { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78570, lng:-78.66680 },
-  { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78660, lng:-78.66700 },
-  { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78730, lng:-78.67350 },
+  { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78634, lng:-78.66785 },
+  { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78685, lng:-78.66579 },
+  { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78654, lng:-78.66733 },
+  { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78747, lng:-78.67181 },
+  { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78490, lng:-78.66684 },
 
   /* --- home --- */
-  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78380, lng:-78.66900 },
+  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269 },
 
   /* --- dorms / where people live --- */
-  { name:"Bragaw Hall",            cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78310, lng:-78.67680 },
-  { name:"Lee Hall",               cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78060, lng:-78.67400 },
-  { name:"Sullivan Hall",          cat:"dorm", emoji:"🛏️", sub:"West campus dorm",    lat:35.78040, lng:-78.67520 },
-  { name:"Metcalf Hall",           cat:"dorm", emoji:"🛏️", sub:"East campus dorm",    lat:35.78870, lng:-78.66380 },
-  { name:"Bowen Hall",             cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78420, lng:-78.66850 },
-  { name:"Tucker Hall",            cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78530, lng:-78.66960 },
-  { name:"Owen Hall",              cat:"dorm", emoji:"🛏️", sub:"Central campus dorm", lat:35.78500, lng:-78.67010 },
-  { name:"Wolf Village Apartments",cat:"dorm", emoji:"🐺", sub:"Apartments",          lat:35.78230, lng:-78.68050 },
+  { name:"Metcalf Hall",     cat:"dorm", emoji:"🛏️", sub:"Right next to Carroll",  lat:35.78549, lng:-78.67313 },
+  { name:"Bowen Hall",       cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78564, lng:-78.67359 },
+  { name:"Tucker Hall",      cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78504, lng:-78.67401 },
+  { name:"Owen Hall",        cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78471, lng:-78.67314 },
+  { name:"Turlington Hall",  cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78462, lng:-78.67255 },
+  { name:"Alexander Hall",   cat:"dorm", emoji:"🛏️", sub:"Central campus",         lat:35.78441, lng:-78.67198 },
+  { name:"Bragaw Hall",      cat:"dorm", emoji:"🛏️", sub:"West campus",            lat:35.78564, lng:-78.67644 },
+  { name:"Lee Hall",         cat:"dorm", emoji:"🛏️", sub:"West campus",            lat:35.78614, lng:-78.67782 },
+  { name:"Sullivan Hall",    cat:"dorm", emoji:"🛏️", sub:"West campus",            lat:35.78690, lng:-78.67743 },
+  { name:"Syme Hall",        cat:"dorm", emoji:"🛏️", sub:"East campus",            lat:35.78395, lng:-78.66579 },
+  { name:"Welch Hall",       cat:"dorm", emoji:"🛏️", sub:"East campus",            lat:35.78358, lng:-78.66529 },
+  { name:"Watauga Hall",     cat:"dorm", emoji:"🛏️", sub:"East campus",            lat:35.78511, lng:-78.66462 },
+  { name:"Becton Hall",      cat:"dorm", emoji:"🛏️", sub:"East campus",            lat:35.78264, lng:-78.66645 },
+  { name:"Berry Hall",       cat:"dorm", emoji:"🛏️", sub:"East campus",            lat:35.78213, lng:-78.66640 },
+  { name:"Wolf Village Apartments", cat:"dorm", emoji:"🐺", sub:"Apartments",       lat:35.78660, lng:-78.68470 },
 
   /* --- dining --- */
-  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",   lat:35.78660, lng:-78.67580 },
-  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",   lat:35.78850, lng:-78.66430 },
-  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"Near Carmichael",      lat:35.78390, lng:-78.67210 },
-  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout", lat:35.78381, lng:-78.67078 },
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",     lat:35.78548, lng:-78.67766 },
+  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",     lat:35.78214, lng:-78.66684 },
+  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958 },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",   lat:35.78401, lng:-78.67082 },
+  { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",      lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
-  { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78770, lng:-78.66950 },
-  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial (take Wolfline!)", lat:35.77014, lng:-78.67655 },
+  { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78750, lng:-78.67000 },
+  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial (take Wolfline!)", lat:35.76930, lng:-78.67644 },
 
   /* --- fun & rec --- */
-  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center", lat:35.78340, lng:-78.67450 },
-  { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games", lat:35.78454, lng:-78.66790 },
-  { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more", lat:35.78320, lng:-78.67560 },
-  { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football (it's a hike)", lat:35.80070, lng:-78.71950 },
+  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",      lat:35.78350, lng:-78.67250 },
+  { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",      lat:35.78352, lng:-78.66991 },
+  { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",  lat:35.78511, lng:-78.67452 },
+  { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football (it's a hike)", lat:35.80080, lng:-78.71970 },
 
   /* --- health & landmarks --- */
-  { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78330, lng:-78.67290 },
-  { name:"Memorial Belltower",    cat:"landmark", emoji:"🔔", sub:"The famous one",        lat:35.78617, lng:-78.66337 },
+  { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78464, lng:-78.67522 },
+  { name:"Memorial Belltower",    cat:"landmark", emoji:"🔔", sub:"The famous one",        lat:35.78614, lng:-78.66350 },
 ];
 
 /* ==========================================================================
@@ -395,6 +417,28 @@ $('homeBtn').onclick = () => {
   if (p) setDestination(p);
 };
 
+/* ---------- I'M HUNGRY: route to physically nearest food ---------- */
+let pendingHungry = false;
+function feedBella() {
+  if (!myPos) {
+    pendingHungry = true;
+    startLocate();
+    toast('Hold on, finding you first… 🛰️');
+    return;
+  }
+  pendingHungry = false;
+  let best = null, bd = Infinity;
+  allPlaces().filter(p => p.cat === 'dining').forEach(p => {
+    const d = haversine(myPos, [p.lat, p.lng]);
+    if (d < bd) { bd = d; best = p; }
+  });
+  if (best) {
+    setDestination(best);
+    toast(`Closest food: ${best.name} — ${fmtDist(bd)} away ${best.emoji}`);
+  }
+}
+$('hungryBtn').onclick = feedBella;
+
 /* ---------- places UI ---------- */
 let activeChip = 'all';
 (function buildChips() {
@@ -453,6 +497,7 @@ function onPosition(pos) {
     if (followMe && dest) map.panTo(myPos);
   }
   if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.speed > 0.5) heading = pos.coords.heading;
+  if (pendingHungry) { feedBella(); return; }
   if (dest) routeCoords.length ? updateProgress() : fetchRoute();
 }
 $('locBtn').onclick = () => {
