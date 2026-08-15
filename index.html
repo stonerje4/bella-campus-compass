@@ -409,6 +409,7 @@ const CATS = {
   food:     { chip:"🌮 Food" },
   bar:      { chip:"🍻 Bars" },
   greek:    { chip:"🏛️ Greek" },
+  store:    { chip:"🛒 Stores" },
   study:    { chip:"📚 Study" },
   fun:      { chip:"🎉 Fun" },
   health:   { chip:"🏥 Health" },
@@ -426,6 +427,21 @@ const PLACES = [
   { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78654, lng:-78.66733 },
   { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78747, lng:-78.67181 },
   { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78490, lng:-78.66684 },
+
+  /* --- other academic buildings (for future semesters / friends' classes) --- */
+  { name:"Poe Hall",       cat:"class", emoji:"🏫", sub:"Psychology dept (her major!)", lat:35.78565, lng:-78.66637 },
+  { name:"Polk Hall",      cat:"class", emoji:"🏫", sub:"Animal science dept",     lat:35.78614, lng:-78.66992 },
+  { name:"Dabney Hall",    cat:"class", emoji:"🏫", sub:"Chemistry",               lat:35.78606, lng:-78.67131 },
+  { name:"Cox Hall",       cat:"class", emoji:"🏫", sub:"Physics",                 lat:35.78605, lng:-78.67096 },
+  { name:"Broughton Hall", cat:"class", emoji:"🏫", sub:"Engineering",             lat:35.78532, lng:-78.66986 },
+  { name:"Riddick Hall",   cat:"class", emoji:"🏫", sub:"Engineering",             lat:35.78501, lng:-78.66836 },
+  { name:"Mann Hall",      cat:"class", emoji:"🏫", sub:"Civil engineering",       lat:35.78526, lng:-78.66918 },
+  { name:"Winston Hall",   cat:"class", emoji:"🏫", sub:"Classes",                 lat:35.78696, lng:-78.66637 },
+  { name:"Tompkins Hall",  cat:"class", emoji:"🏫", sub:"English dept",            lat:35.78666, lng:-78.66517 },
+  { name:"Kilgore Hall",   cat:"class", emoji:"🏫", sub:"Horticulture",            lat:35.78823, lng:-78.67293 },
+  { name:"Nelson Hall",    cat:"class", emoji:"🏫", sub:"Business school",         lat:35.78836, lng:-78.67397 },
+  { name:"Park Shops",     cat:"class", emoji:"🏫", sub:"Classes",                 lat:35.78552, lng:-78.66712 },
+  { name:"Harris Hall",    cat:"class", emoji:"🏛️", sub:"Registrar, cashier, records stuff", lat:35.78564, lng:-78.67443 },
 
   /* --- home --- */
   { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269, door:{lat:35.78524,lng:-78.67265} },
@@ -506,9 +522,25 @@ const PLACES = [
   { name:"Greek Village Townhomes", cat:"greek", emoji:"🏛️", sub:"Greek Village",          lat:35.78096, lng:-78.68003 },
   { name:"Sigma Pi House",        cat:"greek", emoji:"🏛️", sub:"Off campus · Avent Ferry", lat:35.76524, lng:-78.69852 },
 
-  /* --- health & landmarks --- */
-  { name:"Student Health Center", cat:"health",   emoji:"🏥", sub:"Feeling sick? Go here", lat:35.78464, lng:-78.67522 },
-  { name:"Memorial Belltower",    cat:"landmark", emoji:"🔔", sub:"The famous one",        lat:35.78614, lng:-78.66350 },
+  /* --- stores & errands (verified from OSM) --- */
+  { name:"Target",              cat:"store", emoji:"🎯", sub:"Hillsborough St · freshman lifeline", lat:35.78806, lng:-78.66864 },
+  { name:"CVS Pharmacy",        cat:"store", emoji:"💊", sub:"Hillsborough St",           lat:35.78936, lng:-78.67621 },
+  { name:"Harris Teeter",       cat:"store", emoji:"🛒", sub:"Groceries · Village District", lat:35.79156, lng:-78.66171 },
+  { name:"Food Lion",           cat:"store", emoji:"🛒", sub:"Groceries · Western Blvd",  lat:35.78630, lng:-78.69279 },
+  { name:"Wolfpack Outfitters", cat:"store", emoji:"🐺", sub:"Bookstore · in Talley",     lat:35.78363, lng:-78.67070 },
+
+  /* --- health & safety --- */
+  { name:"Student Health Center", cat:"health", emoji:"🏥", sub:"Sick? Also counseling is here", lat:35.78464, lng:-78.67522 },
+  { name:"Campus Police",         cat:"health", emoji:"🚓", sub:"Varsity Dr · emergency? call 911", lat:35.78535, lng:-78.68175 },
+
+  /* --- landmarks & hidden gems --- */
+  { name:"Memorial Belltower",     cat:"landmark", emoji:"🔔", sub:"The famous one",          lat:35.78614, lng:-78.66350 },
+  { name:"The Brickyard",          cat:"landmark", emoji:"🧱", sub:"Center of campus energy", lat:35.78699, lng:-78.67053 },
+  { name:"Free Expression Tunnel", cat:"landmark", emoji:"🎨", sub:"Spray paint is legal here fr", lat:35.78565, lng:-78.67162 },
+  { name:"Court of North Carolina",cat:"landmark", emoji:"🌳", sub:"Hammock & picnic lawn",    lat:35.78626, lng:-78.66615 },
+  { name:"Pullen Park",            cat:"fun", emoji:"🎠", sub:"Carousel & paddle boats · so close", lat:35.77965, lng:-78.66411 },
+  { name:"JC Raulston Arboretum",  cat:"fun", emoji:"🌸", sub:"Free gardens · lowkey date spot", lat:35.79402, lng:-78.69866 },
+  { name:"Lake Raleigh",           cat:"fun", emoji:"🌅", sub:"Centennial · sunset walks",   lat:35.76833, lng:-78.67847 },
 ];
 
 /* ==========================================================================
