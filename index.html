@@ -239,17 +239,29 @@
   #polCap { text-align:center; font-size:19px; font-weight:800; color:#333; margin-top:12px; }
   #polHint { text-align:center; font-size:12px; color:#bbb; margin-top:4px; }
 
-  /* ============ onboarding ============ */
-  #welcome {
+  /* ============ onboarding + lock ============ */
+  #welcome, #lockScreen {
     position:absolute; inset:0; z-index:5000;
     background:linear-gradient(160deg, #CC0000 0%, #7d0000 60%, #3d0000 100%);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     color:#fff; text-align:center; padding:30px;
   }
-  #welcome.off { display:none; }
-  #welcome .wolf { font-size:70px; margin-bottom:14px; }
-  #welcome h1 { font-size:32px; font-weight:900; margin-bottom:10px; }
-  #welcome p { font-size:16px; opacity:.92; line-height:1.5; margin-bottom:30px; font-weight:600; }
+  #lockScreen { z-index:6000; }
+  #welcome.off, #lockScreen.off { display:none; }
+  #welcome .wolf, #lockScreen .wolf { font-size:70px; margin-bottom:14px; }
+  #welcome h1, #lockScreen h1 { font-size:32px; font-weight:900; margin-bottom:10px; }
+  #welcome p, #lockScreen p { font-size:16px; opacity:.92; line-height:1.5; margin-bottom:30px; font-weight:600; }
+  #codeInput {
+    width:100%; max-width:280px; padding:15px; font-size:22px; text-align:center;
+    border:none; border-radius:16px; outline:none; margin-bottom:14px;
+    font-weight:800; letter-spacing:2px;
+  }
+  #unlockBtn {
+    background:#fff; color:var(--red); border:none; border-radius:30px;
+    font-size:18px; font-weight:900; padding:15px 40px;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+  #codeErr { margin-top:14px; font-size:15px; font-weight:800; color:#ffd60a; min-height:20px; }
   #startBtn {
     background:#fff; color:var(--red); border:none; border-radius:30px;
     font-size:19px; font-weight:900; padding:17px 44px;
@@ -289,6 +301,7 @@
 <div id="picOverlay">
   <div id="polaroid">
     <img id="polImg" alt="us 💕">
+    <video id="polVid" playsinline muted autoplay loop controls style="display:none; width:100%; max-height:55vh; border-radius:3px;"></video>
     <div id="polCap"></div>
     <div id="polHint">tap anywhere to close</div>
   </div>
@@ -363,6 +376,16 @@
   <button class="navItem" data-screen="classes"><span class="ic">📅</span><span class="lb">Classes</span></button>
   <button class="navItem" data-screen="compass"><span class="ic">🧭</span><span class="lb">Compass</span></button>
   <button class="navItem" id="navFood"><span class="ic">🍕</span><span class="lb">Feed me</span></button>
+</div>
+
+<!-- passcode lock (asks ONCE per phone, then remembered forever) -->
+<div id="lockScreen">
+  <div class="wolf">🔒</div>
+  <h1>our lil secret 💕</h1>
+  <p>enter the code baby girl<br>(u know the one)</p>
+  <input id="codeInput" type="text" autocomplete="off" autocapitalize="none" placeholder="the code…">
+  <button id="unlockBtn">unlock ❤️</button>
+  <div id="codeErr"></div>
 </div>
 
 <!-- first-open welcome -->
@@ -646,22 +669,45 @@ function renderClasses(day){
 }
 $('homeBtn').onclick=()=>{ const p=findPlace('Carroll Hall'); if(p){ showScreen('map'); setDestination(p); } };
 
-/* ---------- pics of us 💕 ---------- */
-const PICS = ['pics/us1.jpg','pics/us2.jpg','pics/us3.jpg','pics/us4.jpg','pics/us5.jpg',
-              'pics/us6.jpg','pics/us7.jpg','pics/us8.jpg','pics/us9.jpg'];
+/* ---------- pics & vids of us 💕 ---------- */
+const MEDIA = [
+  {t:'i', s:'pics/us1.jpg'},  {t:'i', s:'pics/us2.jpg'},  {t:'i', s:'pics/us3.jpg'},
+  {t:'i', s:'pics/us4.jpg'},  {t:'i', s:'pics/us5.jpg'},  {t:'i', s:'pics/us6.jpg'},
+  {t:'i', s:'pics/us7.jpg'},  {t:'i', s:'pics/us8.jpg'},  {t:'i', s:'pics/us9.jpg'},
+  {t:'i', s:'pics/us10.jpg'}, {t:'i', s:'pics/us11.jpg'}, {t:'i', s:'pics/us12.jpg'},
+  {t:'i', s:'pics/us13.jpg'},
+  {t:'v', s:'pics/vid1.mp4'}, {t:'v', s:'pics/vid2.mp4'}, {t:'v', s:'pics/vid3.mp4'},
+  {t:'v', s:'pics/vid4.mp4'}, {t:'v', s:'pics/vid5.mp4'},
+];
 const CAPTIONS = ['us 💕','miss u baby girl ❤️','ur favorite person 😌','hi pretty girl 💕',
                   'thinking abt u','love u so much ❤️','ur never walking alone 💕'];
 let picBag = [];
-function randomPic(){
-  if(!picBag.length) picBag = [...PICS].sort(()=>Math.random()-.5);
-  return picBag.pop();
+function randomMedia(photosOnly){
+  for(let tries=0; tries<MEDIA.length+1; tries++){
+    if(!picBag.length) picBag = [...MEDIA].sort(()=>Math.random()-.5);
+    const m = picBag.pop();
+    if(!photosOnly || m.t==='i') return m;
+  }
+  return MEDIA[0];
 }
-function showPic(caption){
-  $('polImg').src = randomPic();
+function showPic(caption, photosOnly=false){
+  const m = randomMedia(photosOnly);
+  const img=$('polImg'), vid=$('polVid');
+  if(m.t==='v'){
+    img.style.display='none';
+    vid.style.display='block'; vid.src=m.s; vid.play().catch(()=>{});
+  } else {
+    vid.style.display='none'; vid.pause(); vid.removeAttribute('src');
+    img.style.display='block'; img.src=m.s;
+  }
   $('polCap').textContent = caption;
   $('picOverlay').classList.add('on');
 }
-$('picOverlay').onclick = () => $('picOverlay').classList.remove('on');
+$('picOverlay').onclick = () => {
+  $('picOverlay').classList.remove('on');
+  $('polVid').pause();
+};
+$('polVid').onclick = e => e.stopPropagation();   // let her use the video controls
 $('usBtn').onclick = () => showPic(CAPTIONS[Math.floor(Math.random()*CAPTIONS.length)]);
 
 /* ---------- next class up (auto card on the map) ---------- */
@@ -959,7 +1005,7 @@ function updateProgress(){
   if(remainingDist<18 || haversine(myPos,dest._t)<18){
     $('instr').textContent="u made it!! 🎉🐺";
     $('instrSub').textContent='so proud of u baby girl 💕';
-    if(!arrivedShown){ arrivedShown=true; showPic('u made it baby girl 💕'); }
+    if(!arrivedShown){ arrivedShown=true; showPic('u made it baby girl 💕', true); }
     if(currentScreen==='compass') updateCompassScreen();
     return;
   }
@@ -994,6 +1040,26 @@ $('saveBtn').onclick=()=>{
   drawPlaceMarkers(); renderList();
   toast(`saved "${name}" ⭐`);
 };
+
+/* ---------- passcode lock (asked once per phone, then remembered) ---------- */
+const CODE_HASH = 'f95fc9d255314deebeb3e3be8c7a926caa4e2415c6372befaa8fd6f069b7c4a3';
+async function sha256hex(s){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+if(localStorage.getItem('bellaUnlocked')) $('lockScreen').classList.add('off');
+async function tryUnlock(){
+  const v = $('codeInput').value.trim().toLowerCase().replace(/\s+/g,'');
+  if(v && await sha256hex(v) === CODE_HASH){
+    localStorage.setItem('bellaUnlocked','1');
+    $('lockScreen').classList.add('off');
+  } else {
+    $('codeErr').textContent = 'nope 😤 try again';
+    $('codeInput').value = '';
+  }
+}
+$('unlockBtn').onclick = tryUnlock;
+$('codeInput').addEventListener('keydown', e => { if(e.key==='Enter') tryUnlock(); });
 
 /* ---------- onboarding ---------- */
 if(localStorage.getItem('onboarded')){
