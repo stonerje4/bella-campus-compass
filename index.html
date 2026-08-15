@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#CC0000">
+<title>Bella's Campus Compass 🐺</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #map { position:absolute; inset:0; z-index:1; }
+
+  /* ---------- top instruction banner ---------- */
+  #banner {
+    position:absolute; top:0; left:0; right:0; z-index:1000;
+    background:#CC0000; color:#fff; padding:12px 14px;
+    display:none; align-items:center; gap:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+  #banner.on { display:flex; }
+  #arrowWrap {
+    width:52px; height:52px; flex:0 0 52px; border-radius:50%;
+    background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center;
+  }
+  #arrow { width:34px; height:34px; transition:transform .3s ease; }
+  #instr { font-size:17px; font-weight:700; line-height:1.25; }
+  #instrSub { font-size:13px; font-weight:400; opacity:.9; margin-top:2px; }
+
+  /* ---------- bottom sheet ---------- */
+  #sheet {
+    position:absolute; left:0; right:0; bottom:0; z-index:1000;
+    background:#fff; border-radius:18px 18px 0 0;
+    box-shadow:0 -4px 20px rgba(0,0,0,.25);
+    padding:10px 14px calc(14px + env(safe-area-inset-bottom));
+    max-height:60%; display:flex; flex-direction:column;
+  }
+  #grab { width:42px; height:5px; border-radius:3px; background:#ddd; margin:0 auto 10px; }
+  #statsRow { display:none; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  #statsRow.on { display:flex; }
+  .stat { text-align:center; flex:1; }
+  .stat .big { font-size:22px; font-weight:800; color:#111; }
+  .stat .lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.5px; }
+  #endBtn {
+    background:#eee; color:#CC0000; border:none; border-radius:12px;
+    font-size:14px; font-weight:700; padding:10px 14px;
+  }
+  #searchBox {
+    width:100%; padding:12px 14px; font-size:16px;
+    border:2px solid #eee; border-radius:12px; outline:none; background:#f7f7f7;
+  }
+  #searchBox:focus { border-color:#CC0000; background:#fff; }
+  #placeList { overflow-y:auto; margin-top:8px; flex:1; }
+  .place {
+    display:flex; align-items:center; gap:10px;
+    padding:11px 6px; border-bottom:1px solid #f2f2f2; cursor:pointer;
+  }
+  .place:active { background:#faf0f0; }
+  .place .emoji { font-size:22px; width:30px; text-align:center; }
+  .place .nm { font-size:15px; font-weight:600; color:#222; }
+  .place .cat { font-size:12px; color:#999; }
+  #locBtn {
+    position:absolute; right:12px; z-index:1000; bottom:calc(45% + 20px);
+    width:52px; height:52px; border-radius:50%; border:none;
+    background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3);
+    font-size:24px; display:flex; align-items:center; justify-content:center;
+  }
+  #compassBtn {
+    display:none; position:absolute; right:12px; z-index:1000; bottom:calc(45% + 84px);
+    width:52px; height:52px; border-radius:50%; border:none;
+    background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.3); font-size:24px;
+  }
+  #toast {
+    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:2000;
+    background:rgba(0,0,0,.8); color:#fff; padding:10px 18px; border-radius:20px;
+    font-size:14px; display:none; max-width:85%; text-align:center;
+  }
+  #hint { font-size:12px; color:#aaa; text-align:center; padding-top:8px; }
+  .my-dot {
+    width:18px; height:18px; border-radius:50%;
+    background:#1a73e8; border:3px solid #fff;
+    box-shadow:0 0 0 2px rgba(26,115,232,.4), 0 1px 4px rgba(0,0,0,.4);
+  }
+  #saveBtn {
+    display:none; background:#fff; color:#CC0000; border:none; border-radius:10px;
+    font-size:13px; font-weight:800; padding:8px 12px; margin-left:auto; flex:0 0 auto;
+  }
+  #saveBtn.on { display:block; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="banner">
+  <div id="arrowWrap">
+    <svg id="arrow" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#fff"/>
+    </svg>
+  </div>
+  <div>
+    <div id="instr">Getting directions…</div>
+    <div id="instrSub"></div>
+  </div>
+  <button id="saveBtn">＋ Save spot</button>
+</div>
+
+<button id="locBtn" title="Find me">📍</button>
+<button id="compassBtn" title="Enable compass">🧭</button>
+<div id="toast"></div>
+
+<div id="sheet">
+  <div id="grab"></div>
+  <div id="statsRow">
+    <div class="stat"><div class="big" id="distVal">–</div><div class="lbl">to go</div></div>
+    <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
+    <button id="endBtn">End</button>
+  </div>
+  <input id="searchBox" type="text" placeholder="Where to, Bella? 🐺" autocomplete="off">
+  <div id="placeList"></div>
+  <div id="hint">Tip: press &amp; hold anywhere on the map to navigate there</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ==========================================================================
+   EDIT YOUR PLACES HERE!
+   Coordinates are close but approximate — if a pin looks off, press & hold
+   the real spot on the map, tap "＋ Save spot", and it's stored on the phone.
+   ========================================================================== */
+const PLACES = [
+  { name:"Talley Student Union",     cat:"Food & hangout",  emoji:"🍔", lat:35.78381, lng:-78.67078 },
+  { name:"D.H. Hill Jr. Library",    cat:"Library · North", emoji:"📚", lat:35.78770, lng:-78.66950 },
+  { name:"Hunt Library",             cat:"Library · Centennial", emoji:"🤖", lat:35.77014, lng:-78.67655 },
+  { name:"Memorial Belltower",       cat:"Landmark",        emoji:"🔔", lat:35.78617, lng:-78.66337 },
+  { name:"Carmichael Gym",           cat:"Gym & rec",       emoji:"💪", lat:35.78340, lng:-78.67450 },
+  { name:"Reynolds Coliseum",        cat:"Basketball",      emoji:"🏀", lat:35.78454, lng:-78.66790 },
+  { name:"Fountain Dining Hall",     cat:"Dining · West",   emoji:"🍽️", lat:35.78660, lng:-78.67580 },
+  { name:"Clark Dining Hall",        cat:"Dining · East",   emoji:"🥞", lat:35.78850, lng:-78.66430 },
+  { name:"SAS Hall",                 cat:"Math & stats classes", emoji:"➗", lat:35.78730, lng:-78.67350 },
+  { name:"Poe Hall",                 cat:"Education & psych",    emoji:"🧠", lat:35.78530, lng:-78.66440 },
+  { name:"Withers Hall",             cat:"Classes",         emoji:"🏛️", lat:35.78630, lng:-78.66540 },
+  { name:"Dabney Hall",              cat:"Chemistry",       emoji:"🧪", lat:35.78650, lng:-78.66850 },
+  { name:"Witherspoon Student Center", cat:"Campus life",   emoji:"🎬", lat:35.78320, lng:-78.67560 },
+  { name:"Student Health Center",    cat:"Health",          emoji:"🏥", lat:35.78330, lng:-78.67290 },
+  { name:"Wolf Village Apartments",  cat:"Housing",         emoji:"🏠", lat:35.78230, lng:-78.68050 },
+  { name:"Carter-Finley Stadium",    cat:"Football 🏈",     emoji:"🏈", lat:35.80070, lng:-78.71950 },
+];
+
+/* ---------- map setup ---------- */
+const NCSU = [35.7847, -78.6699];
+const map = L.map('map', { zoomControl:false }).setView(NCSU, 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+const savedPlaces = JSON.parse(localStorage.getItem('bellaSpots') || '[]');
+const allPlaces = () => PLACES.concat(savedPlaces);
+
+const placeMarkers = L.layerGroup().addTo(map);
+function drawPlaceMarkers() {
+  placeMarkers.clearLayers();
+  allPlaces().forEach(p => {
+    L.marker([p.lat, p.lng], {
+      icon: L.divIcon({ className:'', html:`<div style="font-size:20px; text-shadow:0 1px 3px rgba(0,0,0,.4)">${p.emoji||'📌'}</div>`, iconSize:[24,24], iconAnchor:[12,12] })
+    }).addTo(placeMarkers).on('click', () => setDestination(p));
+  });
+}
+drawPlaceMarkers();
+
+/* ---------- state ---------- */
+let myPos = null, myMarker = null, accCircle = null;
+let dest = null, destMarker = null;
+let routeLine = null, routeCoords = [], cumDist = [], totalDist = 0, maneuvers = [];
+let heading = null, lastRouteFetch = 0, watchId = null, followMe = true, droppedPin = null;
+
+const $ = id => document.getElementById(id);
+function toast(msg, ms=3000) {
+  $('toast').textContent = msg; $('toast').style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => $('toast').style.display='none', ms);
+}
+
+/* ---------- geo math ---------- */
+const R = 6371000;
+function haversine(a, b) {
+  const dLat = (b[0]-a[0])*Math.PI/180, dLng = (b[1]-a[1])*Math.PI/180;
+  const la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180;
+  const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function bearing(a, b) {
+  const la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180, dLng = (b[1]-a[1])*Math.PI/180;
+  const y = Math.sin(dLng)*Math.cos(la2);
+  const x = Math.cos(la1)*Math.sin(la2) - Math.sin(la1)*Math.cos(la2)*Math.cos(dLng);
+  return (Math.atan2(y,x)*180/Math.PI + 360) % 360;
+}
+function fmtDist(m) {
+  const ft = m*3.28084;
+  return ft < 950 ? Math.max(10, Math.round(ft/10)*10) + ' ft' : (m/1609.34).toFixed(1) + ' mi';
+}
+function compassWord(b) {
+  return ['north','northeast','east','southeast','south','southwest','west','northwest'][Math.round(b/45)%8];
+}
+
+/* ---------- place list UI ---------- */
+function renderList(filter='') {
+  const f = filter.trim().toLowerCase();
+  $('placeList').innerHTML = '';
+  allPlaces()
+    .filter(p => !f || p.name.toLowerCase().includes(f) || (p.cat||'').toLowerCase().includes(f))
+    .forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'place';
+      d.innerHTML = `<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.cat||''}</div></div>`;
+      d.onclick = () => setDestination(p);
+      $('placeList').appendChild(d);
+    });
+}
+renderList();
+$('searchBox').addEventListener('input', e => renderList(e.target.value));
+
+/* ---------- location ---------- */
+function startLocate() {
+  if (!navigator.geolocation) { toast("This phone doesn't support GPS 😢"); return; }
+  if (watchId !== null) return;
+  toast('Finding you… 🛰️');
+  watchId = navigator.geolocation.watchPosition(onPosition, err => {
+    toast(err.code === 1 ? 'Location is blocked — allow it in your browser settings 🙏' : 'Hmm, GPS is being weird. Try stepping outside?');
+  }, { enableHighAccuracy:true, maximumAge:2000, timeout:20000 });
+}
+function onPosition(pos) {
+  myPos = [pos.coords.latitude, pos.coords.longitude];
+  if (!myMarker) {
+    myMarker = L.marker(myPos, { icon: L.divIcon({ className:'', html:'<div class="my-dot"></div>', iconSize:[18,18], iconAnchor:[9,9] }), zIndexOffset:1000 }).addTo(map);
+    accCircle = L.circle(myPos, { radius:pos.coords.accuracy, color:'#1a73e8', weight:1, fillOpacity:.08 }).addTo(map);
+    map.setView(myPos, 17);
+  } else {
+    myMarker.setLatLng(myPos);
+    accCircle.setLatLng(myPos).setRadius(pos.coords.accuracy);
+    if (followMe && dest) map.panTo(myPos);
+  }
+  if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.speed > 0.5) heading = pos.coords.heading;
+  if (dest) routeCoords.length ? updateProgress() : fetchRoute();
+}
+$('locBtn').onclick = () => {
+  startLocate();
+  followMe = true;
+  if (myPos) map.setView(myPos, 17);
+};
+map.on('dragstart', () => followMe = false);
+
+/* ---------- compass (iPhone needs a permission tap) ---------- */
+function onOrient(e) {
+  if (e.webkitCompassHeading !== undefined) heading = e.webkitCompassHeading;
+  else if (e.absolute && e.alpha !== null) heading = 360 - e.alpha;
+}
+if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+  $('compassBtn').style.display = 'block';
+  $('compassBtn').onclick = () => DeviceOrientationEvent.requestPermission().then(s => {
+    if (s === 'granted') { window.addEventListener('deviceorientation', onOrient); $('compassBtn').style.display='none'; toast('Compass on! 🧭'); }
+  }).catch(()=>{});
+} else {
+  window.addEventListener('deviceorientationabsolute', onOrient);
+  window.addEventListener('deviceorientation', onOrient);
+}
+
+/* ---------- destination + routing ---------- */
+function setDestination(p) {
+  dest = p;
+  if (destMarker) map.removeLayer(destMarker);
+  destMarker = L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>`).openPopup();
+  clearRoute();
+  $('banner').classList.add('on');
+  $('statsRow').classList.add('on');
+  $('instr').textContent = `Let's go to ${p.name}!`;
+  $('instrSub').textContent = myPos ? 'Getting your walking route…' : 'Tap 📍 so I can find you first';
+  $('saveBtn').classList.toggle('on', !!p._unsaved);
+  if (!myPos) startLocate(); else fetchRoute();
+  followMe = true;
+}
+function clearRoute() {
+  if (routeLine) map.removeLayer(routeLine);
+  routeLine = null; routeCoords = []; cumDist = []; maneuvers = []; totalDist = 0;
+}
+$('endBtn').onclick = () => {
+  dest = null; clearRoute();
+  if (destMarker) { map.removeLayer(destMarker); destMarker = null; }
+  $('banner').classList.remove('on');
+  $('statsRow').classList.remove('on');
+};
+
+async function fetchRoute() {
+  if (!myPos || !dest) return;
+  const now = Date.now();
+  if (now - lastRouteFetch < 8000) return;
+  lastRouteFetch = now;
+  const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${myPos[1]},${myPos[0]};${dest.lng},${dest.lat}?overview=full&geometries=geojson&steps=true`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes.length) throw new Error('no route');
+    const route = data.routes[0];
+    routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    cumDist = [0]; totalDist = 0;
+    for (let i = 1; i < routeCoords.length; i++) {
+      totalDist += haversine(routeCoords[i-1], routeCoords[i]);
+      cumDist.push(totalDist);
+    }
+    maneuvers = [];
+    route.legs.forEach(leg => leg.steps.forEach(s => {
+      const loc = [s.maneuver.location[1], s.maneuver.location[0]];
+      let best = 0, bd = Infinity;
+      for (let i = 0; i < routeCoords.length; i++) {
+        const d = haversine(loc, routeCoords[i]);
+        if (d < bd) { bd = d; best = i; }
+      }
+      maneuvers.push({ at: cumDist[best], text: stepText(s) });
+    }));
+    if (routeLine) map.removeLayer(routeLine);
+    routeLine = L.polyline(routeCoords, { color:'#CC0000', weight:6, opacity:.85, lineJoin:'round' }).addTo(map);
+    map.fitBounds(routeLine.getBounds(), { padding:[60,60] });
+    updateProgress();
+  } catch (e) {
+    // fallback: straight line + compass guidance
+    routeCoords = [myPos, [dest.lat, dest.lng]];
+    cumDist = [0, haversine(myPos, [dest.lat, dest.lng])];
+    totalDist = cumDist[1];
+    maneuvers = [{ at:0, text:'Head ' + compassWord(bearing(myPos, [dest.lat, dest.lng])) + ' (as the wolf runs 🐺)' }];
+    if (routeLine) map.removeLayer(routeLine);
+    routeLine = L.polyline(routeCoords, { color:'#CC0000', weight:5, dashArray:'8 10', opacity:.8 }).addTo(map);
+    updateProgress();
+  }
+}
+
+function stepText(s) {
+  const t = s.maneuver.type, m = s.maneuver.modifier || '';
+  const onto = s.name ? ` onto ${s.name}` : '';
+  const M = { 'left':'Turn left','slight left':'Bear left','sharp left':'Sharp left',
+              'right':'Turn right','slight right':'Bear right','sharp right':'Sharp right',
+              'straight':'Continue straight','uturn':'Turn around' };
+  if (t === 'depart') return 'Head ' + compassWord(s.maneuver.bearing_after) + onto;
+  if (t === 'arrive') return "You're here!! 🎉🐺";
+  if (t === 'roundabout' || t === 'rotary') return 'Go around the circle' + onto;
+  return (M[m] || 'Continue') + onto;
+}
+
+function updateProgress() {
+  if (!myPos || !routeCoords.length) return;
+  let best = 0, bd = Infinity;
+  for (let i = 0; i < routeCoords.length; i++) {
+    const d = haversine(myPos, routeCoords[i]);
+    if (d < bd) { bd = d; best = i; }
+  }
+  // off route? re-route
+  if (bd > 45 && Date.now() - lastRouteFetch > 10000) { fetchRoute(); return; }
+
+  const along = cumDist[best];
+  const remaining = Math.max(0, totalDist - along) + Math.min(bd, 30);
+  $('distVal').textContent = fmtDist(remaining);
+  $('etaVal').textContent = Math.max(1, Math.ceil(remaining / 80)) + ' min';
+
+  if (remaining < 18 || haversine(myPos, [dest.lat, dest.lng]) < 18) {
+    $('instr').textContent = "You made it!! 🎉🐺";
+    $('instrSub').textContent = 'Proud of you 💛';
+    return;
+  }
+  // next maneuver ahead of us
+  let next = null;
+  for (const mv of maneuvers) if (mv.at > along + 8) { next = mv; break; }
+  if (next) {
+    $('instr').textContent = next.text;
+    $('instrSub').textContent = 'in ' + fmtDist(next.at - along);
+  } else {
+    $('instr').textContent = 'Keep going — almost there!';
+    $('instrSub').textContent = fmtDist(remaining) + ' left';
+  }
+  // arrow: direction to a point ~15m ahead on the route, relative to phone heading
+  let look = best;
+  while (look < routeCoords.length-1 && cumDist[look] - along < 15) look++;
+  const b = bearing(myPos, routeCoords[look]);
+  const rot = heading === null ? b : (b - heading + 360) % 360;
+  $('arrow').style.transform = `rotate(${rot}deg)`;
+}
+
+/* ---------- long-press to drop a pin ---------- */
+map.on('contextmenu', e => {
+  droppedPin = { name:'Dropped pin', cat:'Custom spot', emoji:'📍',
+                 lat:e.latlng.lat, lng:e.latlng.lng, _unsaved:true };
+  setDestination(droppedPin);
+});
+$('saveBtn').onclick = () => {
+  if (!dest || !dest._unsaved) return;
+  const name = prompt('Name this spot:', 'My dorm');
+  if (!name) return;
+  const p = { name, cat:'Saved spot ⭐', emoji:'⭐', lat:dest.lat, lng:dest.lng };
+  savedPlaces.push(p);
+  localStorage.setItem('bellaSpots', JSON.stringify(savedPlaces));
+  dest = p; $('saveBtn').classList.remove('on');
+  drawPlaceMarkers(); renderList();
+  toast(`Saved "${name}" ⭐`);
+};
+
+/* refresh guidance every few seconds even if GPS is quiet */
+setInterval(() => { if (dest && routeCoords.length) updateProgress(); }, 3000);
+</script>
+</body>
+</html>
