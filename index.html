@@ -443,8 +443,9 @@
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
   <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
   <div id="utilRow">
+    <button id="nextBusBtn">🚏 next bus</button>
     <button id="studyBtn">📚 study spot</button>
-    <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener">🧺 laundry status</a>
+    <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener">🧺 laundry</a>
   </div>
   <div id="datesCard"></div>
   <div id="semBar">
@@ -991,6 +992,7 @@ function parseVehicles(u8){
         if(n3===2) for(const [n4,t4,r4] of fields(r3[0],r3[1])){
           if(n4===1&&t4==='f') v.lat=r4; else if(n4===2&&t4==='f') v.lng=r4;
           else if(n4===3&&t4==='f') v.bear=r4; else if(n4===5&&t4==='f') v.spd=r4; }
+        if(n3===7) v.stop=str(r3);                        // stop it's heading to
         if(n3===8) for(const [n4,,r4] of fields(r3[0],r3[1])){ if(n4===2) v.label=str(r4); }
       }
       if(typeof v.lat==='number' && typeof v.lng==='number') out.push(v);
@@ -999,55 +1001,129 @@ function parseVehicles(u8){
   return out;
 }
 
-let busLayer=null, busData=null, liveLayer=null, busTimer=null;
+let busLayer=null, busData=null, liveLayer=null, stopLayer=null, busTimer=null, liveBuses=[];
+
+/* how many minutes til the next bus on each route reaches this stop.
+   uses the bus's own "next stop" from the live feed + the route's real
+   median seconds-per-stop from the published timetable. */
+function stopETAs(stopId){
+  const out=[];
+  if(!busData) return out;
+  busData.routes.forEach(r=>{
+    const si=r.stops.indexOf(stopId);
+    if(si<0) return;
+    let best=null, bestBus=null;
+    liveBuses.filter(b=>b.route===r.id && b.stop).forEach(b=>{
+      const bi=r.stops.indexOf(b.stop);
+      if(bi<0) return;
+      const away=(si-bi+r.stops.length)%r.stops.length;
+      const mins=Math.round(away*r.hop/60);
+      if(best===null||mins<best){ best=mins; bestBus=b; }
+    });
+    if(best!==null) out.push({n:r.n,c:r.c,mins:best,bus:bestBus});
+  });
+  return out.sort((a,b)=>a.mins-b.mins);
+}
+function etaHtml(stopId){
+  const e=stopETAs(stopId);
+  if(!e.length) return '<div style="font-size:12px;color:#9a9aa2;margin-top:4px">no buses headed here rn 😴</div>';
+  return e.slice(0,4).map(x=>
+    `<div style="margin-top:5px;font-weight:800;font-size:13px">
+       <span style="display:inline-block;min-width:26px;text-align:center;background:${x.c};color:#fff;border-radius:6px;padding:1px 5px;font-size:11px">${x.n}</span>
+       <span style="color:#fff;margin-left:6px">${x.mins<=0?'arriving now 🏃‍♀️':x.mins+' min'}</span>
+     </div>`).join('');
+}
+function nearestStop(){
+  if(!myPos||!busData) return null;
+  let best=null,bd=Infinity;
+  Object.entries(busData.stops).forEach(([id,s])=>{
+    const d=haversine(myPos,[s.lat,s.lng]);
+    if(d<bd){ bd=d; best={id,...s,dist:d}; }
+  });
+  return best;
+}
+function busIcon(routeN,color,bearing,moving){
+  return L.divIcon({ className:'', iconSize:[36,36], iconAnchor:[18,18], html:
+    `<div style="position:relative;width:36px;height:36px">
+       ${moving?`<div style="position:absolute;inset:0;transform:rotate(${Math.round(bearing||0)}deg)">
+         <div style="position:absolute;top:-3px;left:50%;margin-left:-5px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid ${color};filter:drop-shadow(0 0 1px #fff)"></div></div>`:''}
+       <div style="position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:9px;background:${color};border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center">
+         <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm9 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm1.5-6H6V6h12v5z"/></svg>
+       </div>
+       <div style="position:absolute;bottom:-2px;right:-2px;background:#111;color:#fff;border:1.5px solid ${color};border-radius:7px;font-size:9px;font-weight:900;padding:0 3px;line-height:13px">${routeN}</div>
+     </div>` });
+}
 async function refreshLiveBuses(){
   if(!liveLayer) return;
   try{
     const r=await fetch(WOLFLINE_LIVE,{cache:'no-store'});
-    const buses=parseVehicles(new Uint8Array(await r.arrayBuffer()));
+    liveBuses=parseVehicles(new Uint8Array(await r.arrayBuffer()));
     liveLayer.clearLayers();
-    buses.forEach(b=>{
-      const meta=BUS_ROUTES[b.route]||{n:'🚌',c:'#888'};
+    liveBuses.forEach(b=>{
+      const meta=BUS_ROUTES[b.route]||{n:'?',c:'#888'};
       const moving=(b.spd||0)>1;
-      const html=`<div style="position:relative;width:30px;height:30px">
-        <div style="width:30px;height:30px;border-radius:50%;background:${meta.c};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900">${meta.n}</div>
-        ${moving?`<div style="position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(${Math.round(b.bear||0)}deg);transform-origin:50% 22px;font-size:11px;line-height:1">▲</div>`:''}
-      </div>`;
-      L.marker([b.lat,b.lng],{ icon:L.divIcon({className:'',html,iconSize:[30,30],iconAnchor:[15,15]}), zIndexOffset:500 })
-        .bindPopup(`<b>🚌 Route ${meta.n}</b><div style="font-size:12px;color:#9a9aa2;margin-top:3px">bus ${b.label||'?'} · ${moving?Math.round(b.spd)+' mph':'stopped rn'}</div>`)
+      const nx=b.stop&&busData&&busData.stops[b.stop];
+      L.marker([b.lat,b.lng],{ icon:busIcon(meta.n,meta.c,b.bear,moving), zIndexOffset:600 })
+        .bindPopup(`<b>🚌 Route ${meta.n}</b>`+
+          `<div style="font-size:12px;color:#9a9aa2;margin-top:3px">bus ${b.label||'?'} · ${moving?Math.round(b.spd)+' mph':'stopped rn'}</div>`+
+          (nx?`<div style="font-size:12px;color:#9a9aa2;margin-top:2px">next stop: ${nx.n}</div>`:''))
         .addTo(liveLayer);
     });
-    if(buses.length) toastOnce(`${buses.length} buses running rn 🚌`);
+    if(stopLayer) stopLayer.eachLayer(l=>{ if(l.isPopupOpen&&l.isPopupOpen()&&l._stopId) l.setPopupContent(stopPopup(l._stopId)); });
   }catch(e){ /* offline or feed hiccup — keep the route lines up */ }
 }
-let busToastShown=false;
-function toastOnce(m){ if(!busToastShown){ busToastShown=true; toast(m); } }
-
+function stopPopup(id){
+  const s=busData.stops[id];
+  return `<b>🚏 ${s.n}</b>${etaHtml(id)}`;
+}
 async function toggleBus(){
   const btn=$('busBtn');
   if(busLayer){
-    map.removeLayer(busLayer); busLayer=null;
-    if(liveLayer){ map.removeLayer(liveLayer); liveLayer=null; }
+    [busLayer,liveLayer,stopLayer].forEach(l=>l&&map.removeLayer(l));
+    busLayer=liveLayer=stopLayer=null;
     if(busTimer){ clearInterval(busTimer); busTimer=null; }
-    busToastShown=false;
     btn.classList.remove('on'); localStorage.removeItem('busOn'); return;
   }
   try{
     if(!busData) busData=await (await fetch('wolfline.json')).json();
   }catch(e){ toast('no signal — bus map needs internet rn 🚌'); return; }
   busLayer=L.layerGroup();
-  busData.forEach(r=>{
-    L.polyline(r.coords,{ color:r.color, weight:5, opacity:.75, lineJoin:'round' })
-      .bindPopup(`<b>🚌 ${r.route}</b><div style="font-size:12px;color:#9a9aa2;margin-top:4px">${r.note}</div><a href="https://ncstateuni.passiogo.com" target="_blank" rel="noopener" style="display:block;margin-top:5px;font-weight:700;color:#ff5252;text-decoration:none">📍 full live map</a>`)
+  busData.routes.forEach(r=>{
+    if(!r.coords.length) return;
+    L.polyline(r.coords,{ color:r.c, weight:4, opacity:.6, lineJoin:'round' })
+      .bindPopup(`<b>🚌 Route ${r.n}</b><div style="font-size:12px;color:#9a9aa2;margin-top:4px">${r.note}</div>`)
       .addTo(busLayer);
   });
   busLayer.addTo(map);
+  stopLayer=L.layerGroup();
+  Object.entries(busData.stops).forEach(([id,s])=>{
+    const m=L.marker([s.lat,s.lng],{ zIndexOffset:200, icon:L.divIcon({ className:'', iconSize:[13,13], iconAnchor:[6,6],
+      html:`<div style="width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #444;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>` }) });
+    m._stopId=id;
+    m.bindPopup(()=>stopPopup(id));
+    m.addTo(stopLayer);
+  });
+  stopLayer.addTo(map);
   liveLayer=L.layerGroup().addTo(map);
-  refreshLiveBuses();
+  await refreshLiveBuses();
   busTimer=setInterval(refreshLiveBuses, 15000);
   btn.classList.add('on'); localStorage.setItem('busOn','1');
+  const ns=nearestStop();
+  if(ns) toast(`🚏 closest stop: ${ns.n} (${fmtDist(ns.dist)})`, 4000);
+  else toast(`${liveBuses.length} buses running rn 🚌`);
 }
 $('busBtn').onclick=toggleBus;
+/* next-bus shortcut: turn on bus mode and open the nearest stop's arrivals */
+async function showNextBus(){
+  showScreen('map');
+  if(!busLayer) await toggleBus();
+  if(!myPos){ startLocate(); toast('finding u first… 🛰️'); return; }
+  const ns=nearestStop();
+  if(!ns){ toast('no stops nearby 🤷‍♀️'); return; }
+  map.setView([ns.lat,ns.lng], 17);
+  stopLayer.eachLayer(l=>{ if(l._stopId===ns.id) l.openPopup(); });
+}
+$('nextBusBtn').onclick=showNextBus;
 if(localStorage.getItem('busOn')) toggleBus();
 
 /* ---------- classes screen ---------- */
