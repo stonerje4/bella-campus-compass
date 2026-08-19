@@ -179,7 +179,11 @@
     background:#1e1e25; color:#d6d6de; font-size:14px; font-weight:900;
     text-align:center; text-decoration:none;
   }
-  #datesCard { flex:0 0 auto; margin-bottom:12px; }
+  #datesCard { flex:0 0 auto; margin-bottom:10px; }
+  #semBar { flex:0 0 auto; margin-bottom:12px; }
+  #semBarTxt { display:flex; justify-content:space-between; font-size:12px; font-weight:800; color:var(--ink-dim); margin-bottom:5px; }
+  #semTrack { height:6px; border-radius:3px; background:#232329; overflow:hidden; }
+  #semFill { height:100%; width:0; border-radius:3px; background:var(--red-grad); box-shadow:0 0 10px rgba(255,45,45,.5); transition:width .6s ease; }
   .bigDate {
     display:flex; align-items:center; gap:10px; background:var(--surface);
     border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:11px 14px; margin-bottom:6px;
@@ -280,6 +284,13 @@
   #lostClose { background:#232329; color:#8a8a92; }
 
   /* ============ pics of us ============ */
+  #busBtn {
+    position:absolute; left:14px; bottom:calc(var(--nav-h) + 148px); z-index:1100;
+    width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
+    background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
+    box-shadow:var(--shadow-soft); font-size:22px;
+  }
+  #busBtn.on { border-color:rgba(255,45,45,.55); box-shadow:var(--glow); }
   #usBtn {
     position:absolute; right:14px; bottom:calc(var(--nav-h) + 148px); z-index:1100;
     width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
@@ -362,6 +373,7 @@
 </div>
 <button id="locBtn" title="Find me">📍</button>
 <button id="lostBtn">im lost 😭</button>
+<button id="busBtn" title="Wolfline routes">🚌</button>
 <button id="usBtn" title="pics of us">💕</button>
 <div id="toast"></div>
 
@@ -417,6 +429,10 @@
     <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener">🧺 laundry status</a>
   </div>
   <div id="datesCard"></div>
+  <div id="semBar">
+    <div id="semBarTxt"><span id="semPct"></span><span id="semLeft"></span></div>
+    <div id="semTrack"><div id="semFill"></div></div>
+  </div>
   <div id="dayPills"></div>
   <div id="dayLabel"></div>
   <div id="classList"></div>
@@ -546,10 +562,10 @@ const PLACES = [
   /* --- dining --- */
   /* hrs = open ranges in minutes since midnight, keyed by weekday (0=Sun…6=Sat).
      Weekdays verified from dining.ncsu.edu; missing days = unknown (hours vary). */
-  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766, door:{lat:35.78553,lng:-78.67736}, hrs:{1:[[420,1260]],2:[[420,1260]],3:[[420,1260]],4:[[420,1260]],5:[[420,1260]]} },
-  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684, hrs:{1:[[420,1200]],2:[[420,1200]],3:[[420,1200]],4:[[420,1200]],5:[[420,1200]]} },
-  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958, hrs:{1:[[420,600],[660,810]],2:[[420,600],[660,810]],3:[[420,600],[660,810]],4:[[420,600],[660,810]],5:[[420,600],[660,810]]} },
-  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082, door:{lat:35.78458,lng:-78.67136}, hrs:{1:[[660,1320]],2:[[660,1320]],3:[[660,1320]],4:[[660,1320]],5:[[660,1320]]} },
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766, door:{lat:35.78553,lng:-78.67736}, hrs:{1:[[420,1260]],2:[[420,1260]],3:[[420,1260]],4:[[420,1260]],5:[[420,1260]]}, link:{t:"🍽️ what's on the menu today", u:"https://dining.ncsu.edu/location/fountain/"} },
+  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684, hrs:{1:[[420,1200]],2:[[420,1200]],3:[[420,1200]],4:[[420,1200]],5:[[420,1200]]}, link:{t:"🍽️ what's on the menu today", u:"https://dining.ncsu.edu/location/clark/"} },
+  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958, hrs:{1:[[420,600],[660,810]],2:[[420,600],[660,810]],3:[[420,600],[660,810]],4:[[420,600],[660,810]],5:[[420,600],[660,810]]}, link:{t:"🍽️ what's on the menu today", u:"https://dining.ncsu.edu/location/case/"} },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082, door:{lat:35.78458,lng:-78.67136}, hrs:{1:[[660,1320]],2:[[660,1320]],3:[[660,1320]],4:[[660,1320]],5:[[660,1320]]}, link:{t:"🍔 food court menus", u:"https://dining.ncsu.edu/location/talley-pavilions/"} },
   { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",       lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
@@ -677,7 +693,16 @@ const EVENTS = [
   { d:"2026-12-01", what:"last day of classes 🎊",  sub:"u made it" },
   { d:"2026-12-03", d2:"2026-12-09", what:"FINALS 😭📚",     sub:"lock in — Dec 3 to 9" },
 ];
+function renderSemBar(){
+  const start=new Date('2026-08-17T00:00:00'), end=new Date('2026-12-09T23:59:59'), now=new Date();
+  const pct=Math.max(0, Math.min(100, Math.round(100*(now-start)/(end-start))));
+  const daysLeft=Math.max(0, Math.ceil((end-now)/86400000));
+  $('semPct').textContent = now<start ? 'semester loading…' : pct>=100 ? 'SEMESTER DONE 🎉' : `fall semester: ${pct}% done 🎓`;
+  $('semLeft').textContent = now<start||pct>=100 ? '' : `${daysLeft} days left`;
+  $('semFill').style.width = pct+'%';
+}
 function renderDatesCard(){
+  renderSemBar();
   const el=$('datesCard'); if(!el) return;
   const today=new Date(); today.setHours(0,0,0,0);
   const up=EVENTS.map(e=>({...e, dt:new Date(e.d+'T00:00:00'), end:new Date((e.d2||e.d)+'T23:59:59')}))
@@ -857,6 +882,28 @@ function renderWx(){
   el.classList.add('on');
 }
 fetchWx();
+
+/* ---------- offline support ---------- */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- Wolfline bus routes (official GTFS geometry, toggle with 🚌) ---------- */
+let busLayer=null, busData=null;
+async function toggleBus(){
+  const btn=$('busBtn');
+  if(busLayer){ map.removeLayer(busLayer); busLayer=null; btn.classList.remove('on'); localStorage.removeItem('busOn'); return; }
+  try{
+    if(!busData) busData=await (await fetch('wolfline.json')).json();
+  }catch(e){ toast('no signal — bus map needs internet rn 🚌'); return; }
+  busLayer=L.layerGroup();
+  busData.forEach(r=>{
+    L.polyline(r.coords,{ color:r.color, weight:5, opacity:.8, lineJoin:'round' })
+      .bindPopup(`<b>🚌 ${r.route}</b><div style="font-size:12px;color:#9a9aa2;margin-top:4px">${r.note}</div><a href="https://ncsu.passiogo.com" target="_blank" rel="noopener" style="display:block;margin-top:5px;font-weight:700;color:#ff5252;text-decoration:none">📍 live buses rn</a>`)
+      .addTo(busLayer);
+  });
+  busLayer.addTo(map); btn.classList.add('on'); localStorage.setItem('busOn','1');
+}
+$('busBtn').onclick=toggleBus;
+if(localStorage.getItem('busOn')) toggleBus();
 
 /* ---------- classes screen ---------- */
 let today = new Date().getDay();
