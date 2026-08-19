@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Campus Compass">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="robots" content="noindex, nofollow">
 <title>Bella's Campus Compass 🐺</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -160,6 +162,12 @@
   .dayPill.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
   .dayPill.today:not(.on) { color:var(--red); }
   #dayLabel { font-size:13px; font-weight:700; color:#6c6c74; margin:2px 0 4px; flex:0 0 auto; }
+  #utilRow { flex:0 0 auto; display:flex; gap:8px; margin-bottom:10px; }
+  #utilRow button, #utilRow a {
+    flex:1; padding:12px 4px; border-radius:14px; border:.5px solid var(--hairline);
+    background:#1e1e25; color:#d6d6de; font-size:14px; font-weight:900;
+    text-align:center; text-decoration:none;
+  }
   #datesCard { flex:0 0 auto; margin-bottom:12px; }
   .bigDate {
     display:flex; align-items:center; gap:10px; background:var(--surface);
@@ -384,7 +392,7 @@
   <input id="searchBox" type="text" placeholder="search anywhere on campus…" autocomplete="off">
   <div id="chips"></div>
   <div id="placeList"></div>
-  <div id="hint">tip: press &amp; hold anywhere on the map to go there</div>
+  <div id="hint">tip: press &amp; hold the map to drop ur own pin — save ur friends' dorms 👯</div>
 </div>
 
 <!-- classes screen -->
@@ -392,6 +400,10 @@
   <div class="scrTitle">ur week 📅</div>
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
   <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
+  <div id="utilRow">
+    <button id="studyBtn">📚 study spot</button>
+    <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener">🧺 laundry status</a>
+  </div>
   <div id="datesCard"></div>
   <div id="dayPills"></div>
   <div id="dayLabel"></div>
@@ -500,7 +512,7 @@ const PLACES = [
   { name:"Harris Hall",    cat:"class", emoji:"🏛️", sub:"Registrar, cashier, records stuff", lat:35.78564, lng:-78.67443 },
 
   /* --- home --- */
-  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269, door:{lat:35.78524,lng:-78.67265} },
+  { name:"Carroll Hall (HOME 🏠)", cat:"dorm", emoji:"🏠", sub:"Bella's dorm", lat:35.78532, lng:-78.67269, door:{lat:35.78524,lng:-78.67265}, link:{t:"🧺 washers free rn? (laundry is free · code NCSU01)", u:"https://housing.dasa.ncsu.edu/resident-resources/laundry"} },
 
   /* --- dorms --- */
   { name:"Metcalf Hall",     cat:"dorm", emoji:"🛏️", sub:"Right next to Carroll",  lat:35.78549, lng:-78.67313 },
@@ -529,8 +541,8 @@ const PLACES = [
   { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",       lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
-  { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78750, lng:-78.67000 },
-  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial — take the Wolfline 🚌 (25 min walk)", lat:35.76930, lng:-78.67644 },
+  { name:"D.H. Hill Jr. Library", cat:"study", emoji:"📚", sub:"Main library · North campus", lat:35.78750, lng:-78.67000, link:{t:"📖 today's hours", u:"https://www.lib.ncsu.edu/hours"} },
+  { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial — take the Wolfline 🚌 (25 min walk)", lat:35.76930, lng:-78.67644, link:{t:"📖 today's hours", u:"https://www.lib.ncsu.edu/hours"} },
 
   /* --- fun & rec --- */
   { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250, door:{lat:35.78345,lng:-78.67138}, hrs:{0:[[540,1380]],1:[[360,1380]],2:[[360,1380]],3:[[360,1380]],4:[[360,1380]],5:[[360,1260]],6:[[540,1140]]} },
@@ -983,6 +995,16 @@ function feedBella(){
   if(best){ setDestination(best); toast(`closest food: ${best.name} — ${fmtDist(bd)} ${best.emoji}`); }
 }
 $('hungryBtn').onclick=()=>{ showScreen('map'); feedBella(); };
+$('studyBtn').onclick=()=>{
+  showScreen('map');
+  if(!myPos){ startLocate(); toast('finding u first… then the books 📚'); return; }
+  let best=null, bd=Infinity;
+  allPlaces().filter(p=>p.cat==='study').forEach(p=>{
+    const d=haversine(myPos,[p.lat,p.lng]);
+    if(d<bd){ bd=d; best=p; }
+  });
+  if(best){ setDestination(best); toast(`lock in era: ${best.name} 📚`); }
+};
 
 /* ---------- location ---------- */
 function startLocate(){
@@ -1106,7 +1128,8 @@ function setDestination(p){
   if(myPos && haversine(myPos, dest._t) > 1900) toast('lowkey far baby girl — maybe catch the Wolfline 🚌', 4500);
   if(destMarker) map.removeLayer(destMarker);
   const igLinks=(p.ig||[]).map(h=>`<a href="https://instagram.com/${h}" target="_blank" rel="noopener" style="display:block;margin-top:5px;font-weight:700;color:#ff5252;text-decoration:none">📸 @${h}</a>`).join('');
-  destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>${igLinks?igLinks+'<div style="font-size:10px;color:#9a9aa2;margin-top:3px">check their story for parties 👀</div>':''}`).openPopup();
+  const xtra=p.link?`<a href="${p.link.u}" target="_blank" rel="noopener" style="display:block;margin-top:5px;font-weight:700;color:#ff5252;text-decoration:none">${p.link.t}</a>`:'';
+  destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>${igLinks?igLinks+'<div style="font-size:10px;color:#9a9aa2;margin-top:3px">check their story for parties 👀</div>':''}${xtra}`).openPopup();
   clearRoute();
   $('banner').classList.add('on');
   $('statsBar').classList.add('on');
