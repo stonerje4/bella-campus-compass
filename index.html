@@ -248,6 +248,43 @@
   }
   #enableCompassBtn.on { display:block; }
 
+  /* ============ what's poppin (events) ============ */
+  #screenEvents { background:#0e0e11; padding:calc(16px + env(safe-area-inset-top)) 16px 12px; }
+  #evPills { display:flex; gap:6px; margin-bottom:10px; flex:0 0 auto; }
+  .evPill { flex:1; padding:11px 0; border:.5px solid var(--hairline); border-radius:12px;
+    font-size:14px; font-weight:900; background:#1e1e25; color:#8a8a92; }
+  .evPill.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
+  #evList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
+  .ev { display:flex; align-items:center; gap:11px; background:var(--surface);
+    padding:13px 12px; border:1px solid rgba(255,255,255,.07); border-radius:16px; margin-bottom:8px; }
+  .ev .evIc { font-size:22px; flex:0 0 26px; text-align:center; }
+  .ev .evT { font-size:15px; font-weight:800; color:var(--ink); line-height:1.25; }
+  .ev .evW { font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .ev .evTime { font-size:12px; font-weight:900; color:var(--red); margin-top:2px; }
+  .ev .evGo { margin-left:auto; flex:0 0 auto; border:none; border-radius:12px;
+    background:var(--red-grad); color:#fff; font-size:13px; font-weight:900; padding:11px 14px; box-shadow:var(--glow); }
+  .evNone { text-align:center; color:#6c6c74; padding:26px 0; font-size:15px; font-weight:600; line-height:1.5; }
+
+  /* ============ severe weather alert ============ */
+  #wxAlert {
+    display:none; position:absolute; left:0; right:0; z-index:2000;
+    top:calc(env(safe-area-inset-top)); padding:11px 14px;
+    background:linear-gradient(135deg,#ff9500,#d84315); color:#fff;
+    font-size:13px; font-weight:800; text-align:center; line-height:1.35;
+    box-shadow:0 4px 18px rgba(216,67,21,.5);
+  }
+  #wxAlert.on { display:block; }
+
+  /* ============ drunk mode / get me home ============ */
+  #nightBtn {
+    display:none; position:absolute; left:14px; right:14px; bottom:calc(var(--nav-h) + 76px); z-index:1150;
+    padding:20px; border:none; border-radius:20px;
+    background:var(--red-grad); color:#fff; font-size:22px; font-weight:900; letter-spacing:.5px;
+    box-shadow:0 0 30px rgba(255,45,45,.55), 0 8px 24px rgba(0,0,0,.5);
+  }
+  #nightBtn.on { display:block; }
+  #nightBtn small { display:block; font-size:12px; font-weight:700; opacity:.85; margin-top:4px; letter-spacing:0; }
+
   /* ============ next-class card ============ */
   #wxChip {
     display:none; position:absolute; top:calc(10px + env(safe-area-inset-top)); left:12px; z-index:1100;
@@ -405,6 +442,8 @@
 </div>
 
 <!-- next class up card -->
+<div id="wxAlert"></div>
+<button id="nightBtn">🏠 GET ME HOME<small>tap once baby girl, i got u ❤️</small></button>
 <button id="wxChip" title="tap for the full forecast"></button>
 <div id="nextCard">
   <div>
@@ -485,10 +524,21 @@
   <button id="enableCompassBtn">tap to turn on compass 🧭</button>
 </div>
 
+<!-- what's poppin (campus events) -->
+<div class="screen" id="screenEvents">
+  <div class="scrTitle">what's poppin 🎉</div>
+  <div id="evPills">
+    <button class="evPill on" data-when="today">today</button>
+    <button class="evPill" data-when="week">this week</button>
+  </div>
+  <div id="evList"></div>
+</div>
+
 <!-- bottom nav -->
 <div id="nav">
   <button class="navItem on" data-screen="map"><span class="ic">🗺️</span><span class="lb">Map</span></button>
   <button class="navItem" data-screen="classes"><span class="ic">📅</span><span class="lb">Classes</span></button>
+  <button class="navItem" data-screen="events"><span class="ic">🎉</span><span class="lb">Tonight</span></button>
   <button class="navItem" data-screen="compass"><span class="ic">🧭</span><span class="lb">Compass</span></button>
   <button class="navItem" id="navFood"><span class="ic">🍕</span><span class="lb">Feed me</span></button>
 </div>
@@ -814,7 +864,10 @@ function showScreen(name) {
   document.querySelectorAll('.navItem[data-screen]').forEach(b => b.classList.toggle('on', b.dataset.screen===name));
   $('screenClasses').classList.toggle('on', name==='classes');
   $('screenCompass').classList.toggle('on', name==='compass');
+  $('screenEvents').classList.toggle('on', name==='events');
   if (name==='classes') renderDatesCard();
+  if (name==='events') renderEvents();
+  refreshNightBtn();
   if (name==='compass') {
     if (needsCompassPerm && !compassGranted) $('enableCompassBtn').classList.add('on');
     updateCompassScreen();
@@ -957,6 +1010,133 @@ function renderWx(){
 }
 fetchWx();
 
+/* ---------- what's poppin: NC State campus events (public Localist API) ---------- */
+const EV_API='https://calendar.ncsu.edu/api/2/events';
+/* categories that are actually worth her time — info sessions & faculty stuff filtered out */
+const EV_SKIP=/information session|info session|seminar|colloquium|defense|dissertation|faculty|webinar|advisory|board meeting|training/i;
+const EV_ICON=[[/game|football|basketball|soccer|volleyball|tailgate/i,'🏈'],[/concert|music|band|jazz|choir|orchestra|sing/i,'🎵'],
+  [/movie|film|cinema/i,'🎬'],[/food|dinner|lunch|breakfast|bbq|pizza|snack|cookout|ice cream/i,'🍕'],
+  [/party|social|mixer|dance|festival|fair/i,'🎉'],[/art|gallery|exhibit|museum/i,'🎨'],
+  [/yoga|fitness|workout|run|climb|rec/i,'💪'],[/market|sale|shop|pop-?up/i,'🛍️'],
+  [/study|exam|tutor|library|writing/i,'📚'],[/volunteer|service|donate|drive/i,'💛']];
+let EVENTS_LIVE=[], evAt=0, evLayer=null, evWhen='today';
+function evIcon(t){ for(const [re,ic] of EV_ICON) if(re.test(t)) return ic; return '✨'; }
+async function fetchEvents(){
+  if(EVENTS_LIVE.length && Date.now()-evAt < 20*60*1000) return EVENTS_LIVE;
+  try{
+    const r=await fetch(`${EV_API}?days=8&pp=100`);
+    const j=await r.json();
+    EVENTS_LIVE=(j.events||[]).map(x=>{
+      const e=x.event, inst=e.event_instances&&e.event_instances[0]&&e.event_instances[0].event_instance;
+      return { title:e.title, start:inst&&inst.start, allDay:inst&&inst.all_day,
+        place:e.location_name||e.location||'', room:e.room_number||'',
+        lat:e.geo&&e.geo.latitude?+e.geo.latitude:null, lng:e.geo&&e.geo.longitude?+e.geo.longitude:null,
+        url:e.localist_url||e.url, free:!!e.free,
+        food:/free food|refreshments|snacks provided|pizza|free lunch|free dinner|free breakfast/i.test((e.description_text||'')+' '+e.title) };
+    }).filter(e=>e.start && !EV_SKIP.test(e.title));
+    evAt=Date.now();
+  }catch(e){ /* offline — keep whatever we had */ }
+  return EVENTS_LIVE;
+}
+function evOnDay(e,d){ if(!e.start) return false; const s=new Date(e.start); return s.toDateString()===d.toDateString(); }
+function evFiltered(){
+  const now=new Date();
+  if(evWhen==='today'){
+    return EVENTS_LIVE.filter(e=>evOnDay(e,now)).sort((a,b)=>new Date(a.start)-new Date(b.start));
+  }
+  const end=new Date(now.getTime()+7*86400000);
+  return EVENTS_LIVE.filter(e=>{ const s=new Date(e.start); return s>=new Date(now.toDateString()) && s<=end; })
+    .sort((a,b)=>new Date(a.start)-new Date(b.start));
+}
+function evTimeLbl(e){
+  const s=new Date(e.start);
+  const day=s.toDateString()===new Date().toDateString() ? '' : DAYNAMES[s.getDay()].slice(0,3)+' ';
+  if(e.allDay) return day+'all day';
+  return day+fmt12(s.getHours()*60+s.getMinutes());
+}
+async function renderEvents(){
+  const list=$('evList'); if(!list) return;
+  list.innerHTML='<div class="evNone">loading campus events… 🎉</div>';
+  await fetchEvents();
+  const evs=evFiltered();
+  drawEventMarkers();
+  if(!evs.length){ list.innerHTML=`<div class="evNone">nothing on the campus calendar ${evWhen==='today'?'today':'this week'} 😴<br>check the frat instas 📸</div>`; return; }
+  list.innerHTML='';
+  evs.forEach(e=>{
+    const d=document.createElement('div'); d.className='ev';
+    const pl=e.lat?{lat:e.lat,lng:e.lng}:null;
+    const eta=pl?walkEta(pl):'';
+    d.innerHTML=`<div class="evIc">${e.food?'🍕':evIcon(e.title)}</div>
+      <div>
+        <div class="evT">${e.title.replace(/[<>]/g,'')}${e.food?' <span class="badge">FREE FOOD</span>':''}</div>
+        <div class="evW">${(e.place||'somewhere on campus').replace(/[<>]/g,'')}${e.room?' · '+e.room.replace(/[<>]/g,''):''}${eta?' · '+eta+' walk':''}</div>
+        <div class="evTime">${evTimeLbl(e)}</div>
+      </div>
+      ${e.lat?'<button class="evGo">Go</button>':''}`;
+    const go=d.querySelector('.evGo');
+    if(go) go.onclick=()=>{ showScreen('map'); setDestination({name:e.title,cat:'fun',emoji:evIcon(e.title),sub:e.place,lat:e.lat,lng:e.lng}); };
+    list.appendChild(d);
+  });
+}
+function drawEventMarkers(){
+  if(evLayer){ map.removeLayer(evLayer); evLayer=null; }
+  const evs=EVENTS_LIVE.filter(e=>e.lat && evOnDay(e,new Date()));
+  if(!evs.length) return;
+  evLayer=L.layerGroup();
+  evs.forEach(e=>{
+    L.marker([e.lat,e.lng],{ zIndexOffset:300, icon:L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],
+      html:`<div style="width:28px;height:28px;border-radius:50%;background:#ffd60a;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:14px">${e.food?'🍕':evIcon(e.title)}</div>`}) })
+      .bindPopup(`<b>${e.title.replace(/[<>]/g,'')}</b><div style="font-size:12px;color:#9a9aa2;margin-top:3px">${evTimeLbl(e)}${e.place?' · '+e.place.replace(/[<>]/g,''):''}</div>`)
+      .addTo(evLayer);
+  });
+  evLayer.addTo(map);
+}
+document.querySelectorAll('.evPill').forEach(p=>{
+  p.onclick=()=>{ evWhen=p.dataset.when;
+    document.querySelectorAll('.evPill').forEach(q=>q.classList.toggle('on',q===p));
+    renderEvents(); };
+});
+/* pull events at startup so today's stuff is already pinned on the map */
+fetchEvents().then(drawEventMarkers);
+
+/* ---------- gameday 🏈 ---------- */
+function gameToday(){
+  const t=new Date(); t.setHours(0,0,0,0);
+  return EVENTS.find(e=>/🏈/.test(e.what) && new Date(e.d+'T00:00:00').getTime()===t.getTime());
+}
+
+/* ---------- severe weather alerts (National Weather Service) ---------- */
+async function fetchAlerts(){
+  try{
+    const r=await fetch('https://api.weather.gov/alerts/active?point=35.785,-78.669');
+    const j=await r.json();
+    const a=(j.features||[]).map(f=>f.properties)
+      .filter(p=>/severe|extreme|moderate/i.test(p.severity||''))
+      .sort((x,y)=>({Extreme:0,Severe:1,Moderate:2}[x.severity]-{Extreme:0,Severe:1,Moderate:2}[y.severity]))[0];
+    const el=$('wxAlert');
+    if(a){ el.innerHTML=`⚠️ ${a.event.toUpperCase()} — stay inside if u can baby girl ❤️`; el.classList.add('on'); }
+    else el.classList.remove('on');
+  }catch(e){ /* no signal, skip */ }
+}
+fetchAlerts();
+setInterval(fetchAlerts, 15*60*1000);
+
+/* ---------- drunk mode: after dark, one giant button home ---------- */
+function refreshNightBtn(){
+  const h=new Date().getHours();
+  const nightTime = h>=21 || h<4;
+  const show = nightTime && currentScreen==='map' && !dest;
+  $('nightBtn').classList.toggle('on', show);
+}
+$('nightBtn').onclick=()=>{
+  const p=findPlace('Carroll Hall');
+  if(p){ setDestination(p); toast('walking u home baby girl ❤️'); }
+};
+setInterval(refreshNightBtn, 60000);
+refreshNightBtn();
+/* gameday shout on open */
+setTimeout(()=>{ const g=gameToday(); if(g) toast(`🏈 GAMEDAY — ${g.what.replace('🏈 ','')} · 🏈 shuttles run to Carter-Finley`, 6000); }, 2500);
+
 /* ---------- offline support ---------- */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
@@ -987,12 +1167,13 @@ function parseVehicles(u8){
     for(const [n2,,r2] of fields(r[0],r[1])){
       if(n2!==4) continue;                                // VehiclePosition
       const v={};
-      for(const [n3,,r3] of fields(r2[0],r2[1])){
+      for(const [n3,t3,r3] of fields(r2[0],r2[1])){
         if(n3===1) for(const [n4,,r4] of fields(r3[0],r3[1])){ if(n4===5) v.route=str(r4); }
         if(n3===2) for(const [n4,t4,r4] of fields(r3[0],r3[1])){
           if(n4===1&&t4==='f') v.lat=r4; else if(n4===2&&t4==='f') v.lng=r4;
           else if(n4===3&&t4==='f') v.bear=r4; else if(n4===5&&t4==='f') v.spd=r4; }
-        if(n3===7) v.stop=str(r3);                        // stop it's heading to
+        if(n3===5&&t3==='v') v.ts=r3;                     // when this bus last reported
+        if(n3===7&&t3==='b') v.stop=str(r3);              // stop it's heading to
         if(n3===8) for(const [n4,,r4] of fields(r3[0],r3[1])){ if(n4===2) v.label=str(r4); }
       }
       if(typeof v.lat==='number' && typeof v.lng==='number') out.push(v);
@@ -1053,36 +1234,87 @@ function busIcon(routeN,color,bearing,moving){
        <div style="position:absolute;bottom:-2px;right:-2px;background:#111;color:#fff;border:1.5px solid ${color};border-radius:7px;font-size:9px;font-weight:900;padding:0 3px;line-height:13px">${routeN}</div>
      </div>` });
 }
+/* "updated 8s ago" tags — rendered once, then ticked live every second */
+function agoTxt(ts){
+  if(!ts) return 'just now';
+  const s=Math.max(0, Math.round(Date.now()/1000 - ts));
+  return s<60 ? s+'s ago' : Math.round(s/60)+'m ago';
+}
+function agoTag(ts){ return `<span class="agoTag" data-ts="${ts||''}">updated ${agoTxt(ts)}</span>`; }
+setInterval(()=>{
+  document.querySelectorAll('.agoTag').forEach(el=>{
+    const ts=+el.dataset.ts; el.textContent='updated '+agoTxt(ts||0);
+  });
+}, 1000);
+
+/* stop pin: dims when nothing's coming, lights up with the soonest bus's ETA */
+function stopIcon(id){
+  const e=stopETAs(id);
+  if(!e.length) return L.divIcon({ className:'', iconSize:[13,13], iconAnchor:[6,6],
+    html:`<div style="width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #555;opacity:.65;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>` });
+  const x=e[0], lbl=x.mins<=0?'now':x.mins+'m';
+  return L.divIcon({ className:'', iconSize:[46,20], iconAnchor:[9,10], html:
+    `<div style="display:flex;align-items:center;gap:3px;white-space:nowrap">
+       <div style="width:15px;height:15px;flex:0 0 15px;border-radius:50%;background:${x.c};border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.6)"></div>
+       <div style="background:rgba(12,12,15,.92);color:#fff;border:1px solid ${x.c};border-radius:6px;font-size:10px;font-weight:900;padding:1px 4px;line-height:13px;box-shadow:0 1px 4px rgba(0,0,0,.5)">${x.n} · ${lbl}</div>
+     </div>` });
+}
+function refreshStopIcons(){
+  if(!stopLayer) return;
+  stopLayer.eachLayer(l=>{
+    if(!l._stopId) return;
+    l.setIcon(stopIcon(l._stopId));
+    if(l.isPopupOpen && l.isPopupOpen()) l.setPopupContent(stopPopup(l._stopId));
+  });
+}
+const busMarkers={};
 async function refreshLiveBuses(){
   if(!liveLayer) return;
   try{
     const r=await fetch(WOLFLINE_LIVE,{cache:'no-store'});
     liveBuses=parseVehicles(new Uint8Array(await r.arrayBuffer()));
-    liveLayer.clearLayers();
+    const seen={};
     liveBuses.forEach(b=>{
+      const key=b.label||(b.route+'_'+b.lat.toFixed(4));
+      seen[key]=1;
       const meta=BUS_ROUTES[b.route]||{n:'?',c:'#888'};
       const moving=(b.spd||0)>1;
       const nx=b.stop&&busData&&busData.stops[b.stop];
-      L.marker([b.lat,b.lng],{ icon:busIcon(meta.n,meta.c,b.bear,moving), zIndexOffset:600 })
-        .bindPopup(`<b>🚌 Route ${meta.n}</b>`+
-          `<div style="font-size:12px;color:#9a9aa2;margin-top:3px">bus ${b.label||'?'} · ${moving?Math.round(b.spd)+' mph':'stopped rn'}</div>`+
-          (nx?`<div style="font-size:12px;color:#9a9aa2;margin-top:2px">next stop: ${nx.n}</div>`:''))
-        .addTo(liveLayer);
+      const popup=`<b>🚌 Route ${meta.n}</b>`+
+        `<div style="font-size:12px;color:#9a9aa2;margin-top:3px">bus ${b.label||'?'} · ${moving?Math.round(b.spd)+' mph':'stopped rn'}</div>`+
+        (nx?`<div style="font-size:12px;color:#9a9aa2;margin-top:2px">next stop: ${nx.n}</div>`:'')+
+        `<div style="font-size:11px;color:#6c6c74;margin-top:4px">${agoTag(b.ts)}</div>`;
+      let m=busMarkers[key];
+      if(m){                                   /* move it — keeps any open popup alive */
+        m.setLatLng([b.lat,b.lng]);
+        m.setIcon(busIcon(meta.n,meta.c,b.bear,moving));
+        m.setPopupContent(popup);
+      } else {
+        m=L.marker([b.lat,b.lng],{ icon:busIcon(meta.n,meta.c,b.bear,moving), zIndexOffset:600 })
+          .bindPopup(popup).addTo(liveLayer);
+        busMarkers[key]=m;
+      }
     });
-    if(stopLayer) stopLayer.eachLayer(l=>{ if(l.isPopupOpen&&l.isPopupOpen()&&l._stopId) l.setPopupContent(stopPopup(l._stopId)); });
+    Object.keys(busMarkers).forEach(k=>{        /* bus went off duty */
+      if(!seen[k]){ liveLayer.removeLayer(busMarkers[k]); delete busMarkers[k]; }
+    });
+    refreshStopIcons();
   }catch(e){ /* offline or feed hiccup — keep the route lines up */ }
 }
 function stopPopup(id){
   const s=busData.stops[id];
-  return `<b>🚏 ${s.n}</b>${etaHtml(id)}`;
+  const newest=liveBuses.reduce((m,b)=>Math.max(m,b.ts||0),0);
+  return `<b>🚏 ${s.n}</b>${etaHtml(id)}`+
+    `<div style="font-size:11px;color:#6c6c74;margin-top:6px">${agoTag(newest)}</div>`;
 }
 async function toggleBus(){
   const btn=$('busBtn');
   if(busLayer){
     [busLayer,liveLayer,stopLayer].forEach(l=>l&&map.removeLayer(l));
     busLayer=liveLayer=stopLayer=null;
+    Object.keys(busMarkers).forEach(k=>delete busMarkers[k]);
     if(busTimer){ clearInterval(busTimer); busTimer=null; }
-    btn.classList.remove('on'); localStorage.removeItem('busOn'); return;
+    btn.classList.remove('on'); localStorage.setItem('busOff','1'); return;
   }
   try{
     if(!busData) busData=await (await fetch('wolfline.json')).json();
@@ -1107,11 +1339,15 @@ async function toggleBus(){
   liveLayer=L.layerGroup().addTo(map);
   await refreshLiveBuses();
   busTimer=setInterval(refreshLiveBuses, 15000);
-  btn.classList.add('on'); localStorage.setItem('busOn','1');
-  const ns=nearestStop();
-  if(ns) toast(`🚏 closest stop: ${ns.n} (${fmtDist(ns.dist)})`, 4000);
-  else toast(`${liveBuses.length} buses running rn 🚌`);
+  btn.classList.add('on'); localStorage.removeItem('busOff');
+  if(!silentBusStart){
+    const ns=nearestStop();
+    if(ns) toast(`🚏 closest stop: ${ns.n} (${fmtDist(ns.dist)})`, 4000);
+    else if(liveBuses.length) toast(`${liveBuses.length} buses running rn 🚌`);
+  }
+  silentBusStart=false;
 }
+let silentBusStart=false;
 $('busBtn').onclick=toggleBus;
 /* next-bus shortcut: turn on bus mode and open the nearest stop's arrivals */
 async function showNextBus(){
@@ -1124,7 +1360,8 @@ async function showNextBus(){
   stopLayer.eachLayer(l=>{ if(l._stopId===ns.id) l.openPopup(); });
 }
 $('nextBusBtn').onclick=showNextBus;
-if(localStorage.getItem('busOn')) toggleBus();
+/* buses are ON by default — the 🚌 button turns them off, and that choice sticks */
+if(localStorage.getItem('busOff')!=='1'){ silentBusStart=true; toggleBus(); }
 
 /* ---------- classes screen ---------- */
 let today = new Date().getDay();
@@ -1482,6 +1719,7 @@ function setDestination(p){
   $('statsBar').classList.add('on');
   $('wherePill').style.display='none';
   $('wxChip').classList.remove('on');
+  $('nightBtn').classList.remove('on');
   document.documentElement.style.setProperty('--wx-h','0px');
   $('instr').textContent=`let's go: ${p.name}`;
   $('instrSub').textContent= myPos ? 'getting ur walking route…' : 'tap 📍 so i can find u first';
@@ -1502,7 +1740,7 @@ $('endBtn').onclick=()=>{
   $('wherePill').style.display='';
   if(WX){ $('wxChip').classList.add('on'); document.documentElement.style.setProperty('--wx-h','46px'); }
   if(currentScreen==='compass') updateCompassScreen();
-  refreshNextCard();
+  refreshNextCard(); refreshNightBtn();
 };
 $('wxChip').onclick=()=>showScreen('classes');
 
