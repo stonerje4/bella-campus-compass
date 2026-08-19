@@ -160,6 +160,19 @@
   .dayPill.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
   .dayPill.today:not(.on) { color:var(--red); }
   #dayLabel { font-size:13px; font-weight:700; color:#6c6c74; margin:2px 0 4px; flex:0 0 auto; }
+  #datesCard { flex:0 0 auto; margin-bottom:12px; }
+  .bigDate {
+    display:flex; align-items:center; gap:10px; background:var(--surface);
+    border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:11px 14px; margin-bottom:6px;
+  }
+  .bigDate .when { margin-left:auto; flex:0 0 auto; font-size:13px; font-weight:900; color:var(--red); text-align:right; }
+  .bigDate .what { font-size:14px; font-weight:800; color:var(--ink); }
+  .bigDate .sub2 { font-size:12px; color:var(--ink-dim); margin-top:1px; }
+  #quickLinks { flex:0 0 auto; display:flex; gap:6px; padding-top:10px; }
+  #quickLinks a {
+    flex:1; text-align:center; padding:10px 4px; border-radius:12px; text-decoration:none;
+    background:#1e1e25; border:.5px solid var(--hairline); color:#b6b6be; font-size:12px; font-weight:800; white-space:nowrap;
+  }
   #classList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
   .cls {
     display:flex; align-items:center; gap:10px; background:var(--surface);
@@ -379,9 +392,16 @@
   <div class="scrTitle">ur week 📅</div>
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
   <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
+  <div id="datesCard"></div>
   <div id="dayPills"></div>
   <div id="dayLabel"></div>
   <div id="classList"></div>
+  <div id="quickLinks">
+    <a href="https://mypack.ncsu.edu" target="_blank" rel="noopener">🐺 MyPack</a>
+    <a href="https://wolfware.ncsu.edu" target="_blank" rel="noopener">📖 Moodle</a>
+    <a href="https://ncsu.passiogo.com" target="_blank" rel="noopener">🚌 Wolfline live</a>
+    <a href="https://dining.ncsu.edu/locations/" target="_blank" rel="noopener">🍽️ dining hrs</a>
+  </div>
 </div>
 
 <!-- compass screen -->
@@ -459,7 +479,7 @@ const PLACES = [
      so she isn't walked around the building. Buildings without doors
      in OSM (Bostian, Caldwell, 1911, SAS) route to the center. */
   { name:"Withers Hall",   cat:"class", emoji:"🎓", sub:"ANS 105 & WLSP 201 (M/W/F)", lat:35.78634, lng:-78.66785, door:{lat:35.78639,lng:-78.66804} },
-  { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"HSS 120 (Tue 8:30)",         lat:35.78685, lng:-78.66579 },
+  { name:"Caldwell Hall",  cat:"class", emoji:"🎓", sub:"Humanities building",        lat:35.78685, lng:-78.66579 },
   { name:"1911 Building",  cat:"class", emoji:"🎓", sub:"PSY 230 (T/Th 11:45)",       lat:35.78654, lng:-78.66733 },
   { name:"Bostian Hall",   cat:"class", emoji:"🎓", sub:"PSY 311 (T/Th 1:30)",        lat:35.78747, lng:-78.67181 },
   { name:"SAS Hall",       cat:"class", emoji:"🎓", sub:"ST 311 (Fri 12:50)",         lat:35.78490, lng:-78.66684 },
@@ -500,10 +520,12 @@ const PLACES = [
   { name:"Wolf Village Apartments", cat:"dorm", emoji:"🐺", sub:"Apartments",       lat:35.78660, lng:-78.68470 },
 
   /* --- dining --- */
-  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766, door:{lat:35.78553,lng:-78.67736} },
-  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684 },
-  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958 },
-  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082, door:{lat:35.78458,lng:-78.67136} },
+  /* hrs = open ranges in minutes since midnight, keyed by weekday (0=Sun…6=Sat).
+     Weekdays verified from dining.ncsu.edu; missing days = unknown (hours vary). */
+  { name:"Fountain Dining Hall", cat:"dining", emoji:"🍽️", sub:"West campus dining",      lat:35.78548, lng:-78.67766, door:{lat:35.78553,lng:-78.67736}, hrs:{1:[[420,1260]],2:[[420,1260]],3:[[420,1260]],4:[[420,1260]],5:[[420,1260]]} },
+  { name:"Clark Dining Hall",    cat:"dining", emoji:"🥞", sub:"East campus dining",      lat:35.78214, lng:-78.66684, hrs:{1:[[420,1200]],2:[[420,1200]],3:[[420,1200]],4:[[420,1200]],5:[[420,1200]]} },
+  { name:"Case Dining Hall",     cat:"dining", emoji:"🍕", sub:"In Case Academic Center", lat:35.78284, lng:-78.66958, hrs:{1:[[420,600],[660,810]],2:[[420,600],[660,810]],3:[[420,600],[660,810]],4:[[420,600],[660,810]],5:[[420,600],[660,810]]} },
+  { name:"Talley Student Union", cat:"dining", emoji:"🍔", sub:"Food court & hangout",    lat:35.78401, lng:-78.67082, door:{lat:35.78458,lng:-78.67136}, hrs:{1:[[660,1320]],2:[[660,1320]],3:[[660,1320]],4:[[660,1320]],5:[[660,1320]]} },
   { name:"Wolf Village Market",  cat:"dining", emoji:"🛒", sub:"Convenience store",       lat:35.78612, lng:-78.68512 },
 
   /* --- study --- */
@@ -511,7 +533,7 @@ const PLACES = [
   { name:"Hunt Library",          cat:"study", emoji:"🤖", sub:"Centennial — take the Wolfline 🚌 (25 min walk)", lat:35.76930, lng:-78.67644 },
 
   /* --- fun & rec --- */
-  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250, door:{lat:35.78345,lng:-78.67138} },
+  { name:"Carmichael Gym",            cat:"fun", emoji:"💪", sub:"Gym & rec center",       lat:35.78350, lng:-78.67250, door:{lat:35.78345,lng:-78.67138}, hrs:{0:[[540,1380]],1:[[360,1380]],2:[[360,1380]],3:[[360,1380]],4:[[360,1380]],5:[[360,1260]],6:[[540,1140]]} },
   { name:"Reynolds Coliseum",         cat:"fun", emoji:"🏀", sub:"Basketball games",       lat:35.78352, lng:-78.66991 },
   { name:"Witherspoon Student Center",cat:"fun", emoji:"🎬", sub:"Campus cinema & more",   lat:35.78511, lng:-78.67452 },
   { name:"Carter-Finley Stadium",     cat:"fun", emoji:"🏈", sub:"Football — Wolfline 🚌 on gamedays, walking is wild", lat:35.80080, lng:-78.71970 },
@@ -597,8 +619,7 @@ const PLACES = [
 const SCHEDULE = {
   1: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
        { t:"11:45 AM", min:705, c:"WLSP 201", b:"Withers Hall",  r:"Room 130"  } ],
-  2: [ { t:"8:30 AM",  min:510, c:"HSS 120",  b:"Caldwell Hall", r:"Room G106" },
-       { t:"11:45 AM", min:705, c:"PSY 230",  b:"1911 Building", r:"Room 111"  },
+  2: [ { t:"11:45 AM", min:705, c:"PSY 230",  b:"1911 Building", r:"Room 111"  },
        { t:"1:30 PM",  min:810, c:"PSY 311",  b:"Bostian Hall",  r:"Room 3712" } ],
   3: [ { t:"10:40 AM", min:640, c:"ANS 105",  b:"Withers Hall",  r:"Room 232A" },
        { t:"11:45 AM", min:705, c:"WLSP 201", b:"Withers Hall",  r:"Room 130"  } ],
@@ -610,6 +631,38 @@ const SCHEDULE = {
        { t:"12:50 PM", min:770, c:"ST 311",   b:"SAS Hall",      r:"Room 2102" } ],
 };
 const DAYNAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+/* ==========================================================================
+   DATES THAT MATTER — Fall 2026
+   No-class days from the official NC State academic calendar (catalog.ncsu.edu);
+   home football games from gopack.com. d = date (local), d2 = end of multi-day.
+   ========================================================================== */
+const EVENTS = [
+  { d:"2026-09-07", what:"Labor Day 🎉",            sub:"no classes" },
+  { d:"2026-09-11", what:"🏈 vs Richmond",          sub:"home opener · Friday night · Carter-Finley" },
+  { d:"2026-09-26", what:"🏈 vs App State",         sub:"Carter-Finley" },
+  { d:"2026-09-29", what:"Wellness Day 😌",         sub:"no classes — sleep in baby girl" },
+  { d:"2026-10-03", what:"🏈 vs Louisville",        sub:"Carter-Finley" },
+  { d:"2026-10-10", what:"🏈 vs Wake Forest",       sub:"Carter-Finley" },
+  { d:"2026-10-19", d2:"2026-10-20", what:"FALL BREAK 🍂",  sub:"no classes Mon–Tue" },
+  { d:"2026-10-31", what:"🏈 vs Cal · Homecoming 🎃", sub:"Carter-Finley · Halloween game!!" },
+  { d:"2026-11-07", what:"🏈 vs Duke",              sub:"Carter-Finley" },
+  { d:"2026-11-14", what:"🏈 vs Syracuse",          sub:"last home game" },
+  { d:"2026-11-25", d2:"2026-11-27", what:"THANKSGIVING 🦃", sub:"no classes Wed–Fri, come home to me" },
+  { d:"2026-12-01", what:"last day of classes 🎊",  sub:"u made it" },
+  { d:"2026-12-03", d2:"2026-12-09", what:"FINALS 😭📚",     sub:"lock in — Dec 3 to 9" },
+];
+function renderDatesCard(){
+  const el=$('datesCard'); if(!el) return;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const up=EVENTS.map(e=>({...e, dt:new Date(e.d+'T00:00:00'), end:new Date((e.d2||e.d)+'T23:59:59')}))
+    .filter(e=>e.end>=today).slice(0,2);
+  el.innerHTML=up.map(e=>{
+    const days=Math.round((e.dt-today)/86400000);
+    const when=days<0?'NOW':days===0?'TODAY':days===1?'tmrw':`in ${days}d`;
+    return `<div class="bigDate"><div><div class="what">${e.what}</div><div class="sub2">${e.sub}</div></div><div class="when">${when}</div></div>`;
+  }).join('');
+}
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -692,6 +745,7 @@ function showScreen(name) {
   document.querySelectorAll('.navItem[data-screen]').forEach(b => b.classList.toggle('on', b.dataset.screen===name));
   $('screenClasses').classList.toggle('on', name==='classes');
   $('screenCompass').classList.toggle('on', name==='compass');
+  if (name==='classes') renderDatesCard();
   if (name==='compass') {
     if (needsCompassPerm && !compassGranted) $('enableCompassBtn').classList.add('on');
     updateCompassScreen();
@@ -730,12 +784,15 @@ function renderList(filter=''){
       const d=document.createElement('div');
       d.className='place';
       const eta=walkEta(p);
-      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}${p.ig?' 📸':''}</div><div class="cat">${p.sub||''}</div></div>${eta?`<div class="eta">${eta}</div>`:''}`;
+      const op=openNow(p);
+      const opTag=op===true?` · <span style="color:#34d97b;font-weight:800">open til ${closesAt(p)}</span>`:op===false?' · <span style="color:#ff5252;font-weight:800">closed rn</span>':'';
+      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}${p.ig?' 📸':''}</div><div class="cat">${p.sub||''}${opTag}</div></div>${eta?`<div class="eta">${eta}</div>`:''}`;
       d.onclick=()=>{ $('whereSheet').classList.remove('on'); setDestination(p); };
       $('placeList').appendChild(d);
     });
 }
 renderList();
+renderDatesCard();
 $('searchBox').addEventListener('input', e=>renderList(e.target.value));
 
 /* ---------- classes screen ---------- */
@@ -900,11 +957,26 @@ $('lostClass').onclick=()=>{
 $('lostClose').onclick=()=>$('lostSheet').classList.remove('on');
 
 /* ---------- I'M HUNGRY ---------- */
+/* open-now: true / false / null (unknown for that day) */
+function openNow(p){
+  if(!p.hrs) return null;
+  const now=new Date(), ranges=p.hrs[now.getDay()];
+  if(!ranges) return null;
+  const m=now.getHours()*60+now.getMinutes();
+  return ranges.some(([a,b])=>m>=a&&m<b);
+}
+function closesAt(p){
+  const now=new Date(), ranges=p.hrs&&p.hrs[now.getDay()];
+  if(!ranges) return '';
+  const m=now.getHours()*60+now.getMinutes();
+  const r=ranges.find(([a,b])=>m>=a&&m<b);
+  return r?fmt12(r[1]):'';
+}
 function feedBella(){
   if(!myPos){ pendingHungry=true; startLocate(); toast('hold on, finding u first… 🛰️'); return; }
   pendingHungry=false;
   let best=null, bd=Infinity;
-  allPlaces().filter(p=>p.cat==='dining'||p.cat==='food').forEach(p=>{
+  allPlaces().filter(p=>(p.cat==='dining'||p.cat==='food')&&openNow(p)!==false).forEach(p=>{
     const d=haversine(myPos,[p.lat,p.lng]);
     if(d<bd){ bd=d; best=p; }
   });
