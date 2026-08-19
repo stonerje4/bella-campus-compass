@@ -518,21 +518,21 @@ const PLACES = [
 
   /* --- greek life (coords OSM-verified, occupants per NC State FSL chapter house list) --- */
   { name:"Greek Village Apartments", cat:"greek", emoji:"🏛️", sub:"Kappa Alpha Psi · Zeta Phi Beta · 2330 Greek Village Dr", lat:35.78037, lng:-78.68082 },
-  { name:"Greek Village Townhomes", cat:"greek", emoji:"🏛️", sub:"ATO · Kappa Sig · FIJI · Phi Beta Sigma · BYX · 512 Dan Allen", lat:35.78096, lng:-78.68003 },
-  { name:"Chapter Commons",       cat:"greek", emoji:"🏛️", sub:"Phi Kappa Tau · AXiD · Pi Phi · 516 Dan Allen", lat:35.78060, lng:-78.68027 },
+  { name:"Greek Village Townhomes", cat:"greek", emoji:"🏛️", sub:"ATO · Kappa Sig · FIJI · Phi Beta Sigma · BYX · 512 Dan Allen", lat:35.78096, lng:-78.68003, ig:["ato_ncsu","kappasigmancsu"] },
+  { name:"Chapter Commons",       cat:"greek", emoji:"🏛️", sub:"Phi Kappa Tau · AXiD · Pi Phi · 516 Dan Allen", lat:35.78060, lng:-78.68027, ig:["ncsuphitau"] },
   { name:"Fraternity Court",      cat:"greek", emoji:"🏛️", sub:"Chi Omega · KKG · PIKE houses", lat:35.78153, lng:-78.68115 },
-  { name:"Pi Kappa Alpha (PIKE)", cat:"greek", emoji:"🏛️", sub:"2511 Fraternity Court",     lat:35.78167, lng:-78.68137 },
-  { name:"Alpha Gamma Rho",       cat:"greek", emoji:"🏛️", sub:"1402 Varsity Dr",           lat:35.77897, lng:-78.68432 },
-  { name:"Sigma Nu",              cat:"greek", emoji:"🏛️", sub:"2312 Greek Village Dr",     lat:35.77894, lng:-78.68042 },
-  { name:"Sigma Phi Epsilon (SigEp)", cat:"greek", emoji:"🏛️", sub:"2308 Greek Village Dr", lat:35.77878, lng:-78.68078 },
-  { name:"Lambda Chi Alpha",      cat:"greek", emoji:"🏛️", sub:"2605 Stewardship Park",     lat:35.78079, lng:-78.68159 },
-  { name:"Pi Kappa Phi",          cat:"greek", emoji:"🏛️", sub:"3501 Avent Ferry Rd",       lat:35.76605, lng:-78.69907 },
-  { name:"Kappa Alpha Order (KA)", cat:"greek", emoji:"🏛️", sub:"3408 Greek Way",           lat:35.76521, lng:-78.69849 },
-  { name:"Sigma Chi",             cat:"greek", emoji:"🏛️", sub:"3412 Greek Way",            lat:35.76498, lng:-78.69782 },
-  { name:"Theta Chi",             cat:"greek", emoji:"🏛️", sub:"3421 Avent Ferry Rd",       lat:35.76622, lng:-78.69826 },
-  { name:"FarmHouse",             cat:"greek", emoji:"🏛️", sub:"115 Park Ave · off campus", lat:35.78331, lng:-78.65693 },
-  { name:"Phi Gamma Delta (FIJI)", cat:"greek", emoji:"🏛️", sub:"1602 Gorman St",           lat:35.77675, lng:-78.68814 },
-  { name:"Alpha Sigma Phi",       cat:"greek", emoji:"🏛️", sub:"1526 Tryon Rd · FAR — get a ride", lat:35.73835, lng:-78.66382 },
+  { name:"Pi Kappa Alpha (PIKE)", cat:"greek", emoji:"🏛️", sub:"2511 Fraternity Court",     lat:35.78167, lng:-78.68137, ig:["ncsupikes"] },
+  { name:"Alpha Gamma Rho",       cat:"greek", emoji:"🏛️", sub:"1402 Varsity Dr",           lat:35.77897, lng:-78.68432, ig:["agr_ncsu"] },
+  { name:"Sigma Nu",              cat:"greek", emoji:"🏛️", sub:"2312 Greek Village Dr",     lat:35.77894, lng:-78.68042, ig:["ncsusigmanu"] },
+  { name:"Sigma Phi Epsilon (SigEp)", cat:"greek", emoji:"🏛️", sub:"2308 Greek Village Dr", lat:35.77878, lng:-78.68078, ig:["ncsu_sigep"] },
+  { name:"Lambda Chi Alpha",      cat:"greek", emoji:"🏛️", sub:"2605 Stewardship Park",     lat:35.78079, lng:-78.68159, ig:["ncsulxa"] },
+  { name:"Pi Kappa Phi",          cat:"greek", emoji:"🏛️", sub:"3501 Avent Ferry Rd",       lat:35.76605, lng:-78.69907, ig:["ncsupikapp"] },
+  { name:"Kappa Alpha Order (KA)", cat:"greek", emoji:"🏛️", sub:"3408 Greek Way",           lat:35.76521, lng:-78.69849, ig:["ka_ncsu"] },
+  { name:"Sigma Chi",             cat:"greek", emoji:"🏛️", sub:"3412 Greek Way",            lat:35.76498, lng:-78.69782, ig:["ncsusigmachi"] },
+  { name:"Theta Chi",             cat:"greek", emoji:"🏛️", sub:"3421 Avent Ferry Rd",       lat:35.76622, lng:-78.69826, ig:["ncsuthetachi"] },
+  { name:"FarmHouse",             cat:"greek", emoji:"🏛️", sub:"115 Park Ave · off campus", lat:35.78331, lng:-78.65693, ig:["farmhouse_ncsu"] },
+  { name:"Phi Gamma Delta (FIJI)", cat:"greek", emoji:"🏛️", sub:"1602 Gorman St",           lat:35.77675, lng:-78.68814, ig:["ncsufiji"] },
+  { name:"Alpha Sigma Phi",       cat:"greek", emoji:"🏛️", sub:"1526 Tryon Rd · FAR — get a ride", lat:35.73835, lng:-78.66382, ig:["alphasigsncsu"] },
 
   /* --- stores & errands (verified from OSM) --- */
   { name:"Target",              cat:"store", emoji:"🎯", sub:"Hillsborough St · freshman lifeline", lat:35.78806, lng:-78.66864 },
@@ -694,7 +694,7 @@ function renderList(filter=''){
       const d=document.createElement('div');
       d.className='place';
       const eta=walkEta(p);
-      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}</div><div class="cat">${p.sub||''}</div></div>${eta?`<div class="eta">${eta}</div>`:''}`;
+      d.innerHTML=`<div class="emoji">${p.emoji||'📌'}</div><div><div class="nm">${p.name}${p.ig?' 📸':''}</div><div class="cat">${p.sub||''}</div></div>${eta?`<div class="eta">${eta}</div>`:''}`;
       d.onclick=()=>{ $('whereSheet').classList.remove('on'); setDestination(p); };
       $('placeList').appendChild(d);
     });
@@ -997,7 +997,8 @@ function setDestination(p){
   dest._t = p.door ? [p.door.lat, p.door.lng] : [p.lat, p.lng];   // route to the door if we know it
   if(myPos && haversine(myPos, dest._t) > 1900) toast('lowkey far baby girl — maybe catch the Wolfline 🚌', 4500);
   if(destMarker) map.removeLayer(destMarker);
-  destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>`).openPopup();
+  const igLinks=(p.ig||[]).map(h=>`<a href="https://instagram.com/${h}" target="_blank" rel="noopener" style="display:block;margin-top:5px;font-weight:700;color:#CC0000;text-decoration:none">📸 @${h}</a>`).join('');
+  destMarker=L.marker([p.lat,p.lng]).addTo(map).bindPopup(`<b>${p.name}</b>${igLinks?igLinks+'<div style="font-size:10px;color:#888;margin-top:3px">check their story for parties 👀</div>':''}`).openPopup();
   clearRoute();
   $('banner').classList.add('on');
   $('statsBar').classList.add('on');
