@@ -239,8 +239,15 @@
   #enableCompassBtn.on { display:block; }
 
   /* ============ next-class card ============ */
+  #wxChip {
+    display:none; position:absolute; top:calc(10px + env(safe-area-inset-top)); left:12px; z-index:1100;
+    padding:9px 15px; border-radius:22px; border:.5px solid var(--hairline);
+    background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
+    box-shadow:var(--shadow-soft); color:var(--ink); font-size:14px; font-weight:800;
+  }
+  #wxChip.on { display:block; }
   #nextCard {
-    display:none; position:absolute; top:calc(10px + env(safe-area-inset-top));
+    display:none; position:absolute; top:calc(10px + env(safe-area-inset-top) + var(--wx-h,0px));
     left:12px; right:12px; z-index:1100;
     background:var(--glass); backdrop-filter:blur(18px) saturate(1.8); -webkit-backdrop-filter:blur(18px) saturate(1.8);
     border:.5px solid var(--hairline); border-radius:18px; padding:12px 14px;
@@ -388,6 +395,7 @@
 </div>
 
 <!-- next class up card -->
+<button id="wxChip" title="tap for the full forecast"></button>
 <div id="nextCard">
   <div>
     <div id="ncTitle"></div>
@@ -874,12 +882,28 @@ function fitCheck(){
   else if(rain>=30) fit+=' · <span id="wxRain">might rain, take the umbrella 🌦️</span>';
   return fit;
 }
+function fitShort(){
+  const hi=Math.round(WX.daily.temperature_2m_max[0]);
+  const rain=WX.daily.precipitation_probability_max[0];
+  if(rain>=50) return 'umbrella ☔';
+  const s = hi>=85 ? 'tank top 🥵' : hi>=70 ? 't-shirt 😎' : hi>=55 ? 'hoodie 🧥' : hi>=40 ? 'jacket 🥶' : 'bundle up 🧊';
+  return rain>=30 ? s+' + umbrella 🌦️' : s;
+}
 function renderWx(){
-  const el=$('wxCard'); if(!el || !WX) return;
+  if(!WX) return;
   const cur=Math.round(WX.current.temperature_2m);
   const hi=Math.round(WX.daily.temperature_2m_max[0]), lo=Math.round(WX.daily.temperature_2m_min[0]);
-  el.innerHTML=`<div><div id="wxTemp">${cur}°</div><div id="wxHiLo">H ${hi}° · L ${lo}°</div></div><div id="wxFit">${fitCheck()}</div>`;
-  el.classList.add('on');
+  const el=$('wxCard');
+  if(el){
+    el.innerHTML=`<div><div id="wxTemp">${cur}°</div><div id="wxHiLo">H ${hi}° · L ${lo}°</div></div><div id="wxFit">${fitCheck()}</div>`;
+    el.classList.add('on');
+  }
+  const chip=$('wxChip');
+  if(chip){
+    chip.innerHTML=`${cur}° · ${fitShort()}`;
+    if(!dest) chip.classList.add('on');
+    document.documentElement.style.setProperty('--wx-h','46px');
+  }
 }
 fetchWx();
 
@@ -1256,6 +1280,8 @@ function setDestination(p){
   $('banner').classList.add('on');
   $('statsBar').classList.add('on');
   $('wherePill').style.display='none';
+  $('wxChip').classList.remove('on');
+  document.documentElement.style.setProperty('--wx-h','0px');
   $('instr').textContent=`let's go: ${p.name}`;
   $('instrSub').textContent= myPos ? 'getting ur walking route…' : 'tap 📍 so i can find u first';
   $('saveBtn').classList.toggle('on', !!p._unsaved);
@@ -1273,9 +1299,11 @@ $('endBtn').onclick=()=>{
   $('banner').classList.remove('on');
   $('statsBar').classList.remove('on');
   $('wherePill').style.display='';
+  if(WX){ $('wxChip').classList.add('on'); document.documentElement.style.setProperty('--wx-h','46px'); }
   if(currentScreen==='compass') updateCompassScreen();
   refreshNextCard();
 };
+$('wxChip').onclick=()=>showScreen('classes');
 
 async function fetchRoute(){
   if(!myPos || !dest) return;
