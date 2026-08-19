@@ -162,6 +162,17 @@
   .dayPill.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
   .dayPill.today:not(.on) { color:var(--red); }
   #dayLabel { font-size:13px; font-weight:700; color:#6c6c74; margin:2px 0 4px; flex:0 0 auto; }
+  #wxCard {
+    display:none; flex:0 0 auto; margin-bottom:10px; padding:12px 14px;
+    background:var(--surface); border:1px solid rgba(255,255,255,.07); border-radius:14px;
+    align-items:center; gap:12px;
+  }
+  #wxCard.on { display:flex; }
+  #wxTemp { font-size:28px; font-weight:900; color:var(--ink); flex:0 0 auto; }
+  #wxHiLo { font-size:12px; font-weight:800; color:var(--ink-dim); margin-top:1px; }
+  #wxFit { font-size:13px; font-weight:700; color:#d6d6de; line-height:1.35; }
+  #wxRain { color:#5ab8ff; font-weight:800; }
+  .clsRain { font-size:12px; font-weight:800; color:#5ab8ff; margin-top:2px; }
   #utilRow { flex:0 0 auto; display:flex; gap:8px; margin-bottom:10px; }
   #utilRow button, #utilRow a {
     flex:1; padding:12px 4px; border-radius:14px; border:.5px solid var(--hairline);
@@ -398,6 +409,7 @@
 <!-- classes screen -->
 <div class="screen" id="screenClasses">
   <div class="scrTitle">ur week 📅</div>
+  <div id="wxCard"></div>
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
   <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
   <div id="utilRow">
@@ -650,6 +662,7 @@ const DAYNAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","S
    home football games from gopack.com. d = date (local), d2 = end of multi-day.
    ========================================================================== */
 const EVENTS = [
+  { d:"2026-09-04", what:"UR BOY GETS HERE 😍❤️",   sub:"Sept 4 — best day of the semester" },
   { d:"2026-09-07", what:"Labor Day 🎉",            sub:"no classes" },
   { d:"2026-09-11", what:"🏈 vs Richmond",          sub:"home opener · Friday night · Carter-Finley" },
   { d:"2026-09-26", what:"🏈 vs App State",         sub:"Carter-Finley" },
@@ -807,6 +820,44 @@ renderList();
 renderDatesCard();
 $('searchBox').addEventListener('input', e=>renderList(e.target.value));
 
+/* ---------- weather (Open-Meteo — free, no key, auto-updates every open) ---------- */
+let WX=null, wxAt=0;
+async function fetchWx(){
+  if(WX && Date.now()-wxAt < 30*60*1000) return;   // fresh enough
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.785&longitude=-78.669&current=temperature_2m,precipitation&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York&forecast_days=1');
+    const j=await r.json();
+    if(j && j.daily){ WX=j; wxAt=Date.now(); renderWx(); renderClasses(shownDay); refreshNextCard(); }
+  }catch(e){ /* no signal — just skip weather this time */ }
+}
+function rainAt(min){            /* % rain chance at that hour today, or null */
+  if(!WX || !WX.hourly) return null;
+  const h=Math.min(23, Math.floor(min/60));
+  const v=WX.hourly.precipitation_probability[h];
+  return (v===undefined||v===null)?null:v;
+}
+function rainyClass(min){ const p=rainAt(min); return p!==null && p>=50; }
+function fitCheck(){
+  const hi=Math.round(WX.daily.temperature_2m_max[0]);
+  const rain=WX.daily.precipitation_probability_max[0];
+  let fit = hi>=85 ? 'it\'s HOT — tank top + water bottle 🥵'
+          : hi>=70 ? 't-shirt kinda day 😎'
+          : hi>=55 ? 'hoodie weather 🧥'
+          : hi>=40 ? 'real jacket today, no arguing 🥶'
+          : 'BUNDLE UP baby girl it\'s freezing 🧊';
+  if(rain>=50) fit+=' · <span id="wxRain">rain jacket fr ☔</span>';
+  else if(rain>=30) fit+=' · <span id="wxRain">might rain, take the umbrella 🌦️</span>';
+  return fit;
+}
+function renderWx(){
+  const el=$('wxCard'); if(!el || !WX) return;
+  const cur=Math.round(WX.current.temperature_2m);
+  const hi=Math.round(WX.daily.temperature_2m_max[0]), lo=Math.round(WX.daily.temperature_2m_min[0]);
+  el.innerHTML=`<div><div id="wxTemp">${cur}°</div><div id="wxHiLo">H ${hi}° · L ${lo}°</div></div><div id="wxFit">${fitCheck()}</div>`;
+  el.classList.add('on');
+}
+fetchWx();
+
 /* ---------- classes screen ---------- */
 let today = new Date().getDay();
 let shownDay = (today>=1 && today<=5) ? today : 1;
@@ -824,8 +875,8 @@ function syncDay(){
   renderClasses(shownDay);
   renderDatesCard();
 }
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncDay(); });
-window.addEventListener('pageshow', syncDay);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ syncDay(); fetchWx(); } });
+window.addEventListener('pageshow', ()=>{ syncDay(); fetchWx(); });
 (function buildDayPills(){
   const wrap=$('dayPills');
   const letters=['M','T','W','T','F'];
@@ -856,18 +907,22 @@ function renderClasses(day){
     }
     const pl=findPlace(cl.b);
     let eta=pl?walkEta(pl):'';
-    /* "leave by" = class start − walk time − 5 min buffer, today's future classes only */
+    /* "leave by" = class start − walk time − 5 min buffer (+5 more if it's gonna rain) */
+    const wet = isToday && rainyClass(cl.min);
     if(eta && isToday && nowMin < cl.min){
       const wm=walkMins(pl);
-      const leave=cl.min - wm - 5;
-      eta += nowMin >= leave ? ' · leave NOW baby girl 😳' : ` · leave by ${fmt12(leave)} ❤️`;
+      const leave=cl.min - wm - 5 - (wet?5:0);
+      eta += nowMin >= leave ? ' · leave NOW baby girl 😳' : ` · leave by ${fmt12(leave)} ${wet?'☔':'❤️'}`;
     }
+    const rp = isToday ? rainAt(cl.min) : null;
+    const rainLine = (rp!==null && rp>=30) ? `<div class="clsRain">🌧️ ${rp}% rain at ${cl.t.toLowerCase()}${rp>=50?' — hood UP':''}</div>` : '';
     d.innerHTML=`
       <div class="time">${cl.t}</div>
       <div>
         <div class="course">${cl.c}${badge}</div>
         <div class="where">${cl.b} · ${cl.r}</div>
         ${eta?`<div class="eta">${eta} from u rn</div>`:''}
+        ${rainLine}
       </div>
       <button class="go">Go</button>`;
     d.querySelector('.go').onclick=()=>{
@@ -938,8 +993,9 @@ function refreshNextCard(){
   $('ncSub').textContent = `${nc.b} · ${nc.r}`;
   const pl=findPlace(nc.b);
   if(pl && myPos && nowMin<nc.min){
-    const leave=nc.min - walkMins(pl) - 5;
-    $('ncLeave').textContent = nowMin>=leave ? 'leave NOW baby girl 😳' : `leave by ${fmt12(leave)} ❤️`;
+    const wet=rainyClass(nc.min);
+    const leave=nc.min - walkMins(pl) - 5 - (wet?5:0);
+    $('ncLeave').textContent = (nowMin>=leave ? 'leave NOW baby girl 😳' : `leave by ${fmt12(leave)} ${wet?'☔':'❤️'}`) + (wet?' — it\'s gonna rain':'');
   } else $('ncLeave').textContent='';
   card.classList.add('on');
 }
