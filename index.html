@@ -91,11 +91,15 @@
   .stat .big { font-size:20px; font-weight:900; color:var(--ink); }
   .stat .lbl { font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
   #endBtn { background:rgba(255,45,45,.14); color:var(--red); border:1px solid rgba(255,45,45,.35); border-radius:12px; font-size:14px; font-weight:800; padding:12px 16px; }
-  #locBtn {
+  /* right-edge tool stack — one column instead of buttons scattered in corners */
+  #tools {
     position:absolute; right:14px; bottom:calc(var(--nav-h) + 84px); z-index:1100;
+    display:flex; flex-direction:column; gap:9px;
+  }
+  #tools button {
     width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
     background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
-    box-shadow:var(--shadow-soft); font-size:24px;
+    box-shadow:var(--shadow-soft); font-size:23px;
   }
   #toast {
     position:absolute; top:calc(70px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:3000;
@@ -126,6 +130,9 @@
   #chips::-webkit-scrollbar { display:none; }
   .chip { flex:0 0 auto; border:.5px solid var(--hairline); border-radius:20px; padding:9px 15px; font-size:13px; font-weight:800; background:#1e1e25; color:#b6b6be; white-space:nowrap; transition:transform .12s ease, background .15s; }
   .chip.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
+  #slicers { display:flex; gap:6px; padding-bottom:8px; flex:0 0 auto; }
+  .chip.sl { background:#17171c; color:#8a8a92; border:.5px solid var(--hairline); font-size:12px; padding:7px 12px; }
+  .chip.sl.on { background:rgba(52,217,123,.16); border-color:rgba(52,217,123,.5); color:#34d97b; box-shadow:none; }
   #placeList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
   .place { display:flex; align-items:center; gap:10px; padding:12px 6px; border-bottom:1px solid rgba(255,255,255,.06); }
   .place:active { background:rgba(255,45,45,.08); }
@@ -188,12 +195,15 @@
   .wxBits b { color:var(--ink); }
   .clsDark { font-size:12px; font-weight:800; color:#c9a6ff; margin-top:2px; }
   .clsRain { font-size:12px; font-weight:800; color:#5ab8ff; margin-top:2px; }
-  #utilRow { flex:0 0 auto; display:flex; gap:8px; margin-bottom:10px; }
+  #utilRow { flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:12px; }
   #utilRow button, #utilRow a {
-    flex:1; padding:12px 4px; border-radius:14px; border:.5px solid var(--hairline);
-    background:#1e1e25; color:#d6d6de; font-size:14px; font-weight:900;
-    text-align:center; text-decoration:none;
+    padding:10px 2px 8px; border-radius:14px; border:.5px solid var(--hairline);
+    background:#1e1e25; color:#c9c9d2; font-size:11px; font-weight:800;
+    text-align:center; text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:3px;
   }
+  #utilRow span { font-size:19px; line-height:1; }
+  .secLbl { flex:0 0 auto; font-size:11px; font-weight:900; color:#6c6c74;
+    text-transform:uppercase; letter-spacing:.7px; margin:2px 0 7px; }
   #datesCard { flex:0 0 auto; margin-bottom:10px; }
   #semBar { flex:0 0 auto; margin-bottom:12px; }
   #semBarTxt { display:flex; justify-content:space-between; font-size:12px; font-weight:800; color:var(--ink-dim); margin-bottom:5px; }
@@ -259,6 +269,8 @@
   .evPill { flex:1; padding:11px 0; border:.5px solid var(--hairline); border-radius:12px;
     font-size:14px; font-weight:900; background:#1e1e25; color:#8a8a92; }
   .evPill.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
+  #evCats { display:flex; gap:6px; overflow-x:auto; padding-bottom:9px; flex:0 0 auto; scrollbar-width:none; }
+  #evCats::-webkit-scrollbar { display:none; }
   #evList { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; min-height:0; }
   .ev { display:flex; align-items:center; gap:11px; background:var(--surface);
     padding:13px 12px; border:1px solid rgba(255,255,255,.07); border-radius:16px; margin-bottom:8px; }
@@ -282,7 +294,7 @@
 
   /* ============ drunk mode / get me home ============ */
   #nightBtn {                       /* sits ABOVE the lost / locate / bus / pics buttons */
-    display:none; position:absolute; left:14px; right:14px; bottom:calc(var(--nav-h) + 212px); z-index:1150;
+    display:none; position:absolute; left:14px; right:80px; bottom:calc(var(--nav-h) + 148px); z-index:1150;
     padding:16px; border:none; border-radius:20px;
     background:var(--red-grad); color:#fff; font-size:22px; font-weight:900; letter-spacing:.5px;
     box-shadow:0 0 30px rgba(255,45,45,.55), 0 8px 24px rgba(0,0,0,.5);
@@ -343,19 +355,7 @@
   #lostClose { background:#232329; color:#8a8a92; }
 
   /* ============ pics of us ============ */
-  #busBtn {
-    position:absolute; left:14px; bottom:calc(var(--nav-h) + 148px); z-index:1100;
-    width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
-    background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
-    box-shadow:var(--shadow-soft); font-size:22px;
-  }
-  #busBtn.on { border-color:rgba(255,45,45,.55); box-shadow:var(--glow); }
-  #usBtn {
-    position:absolute; right:14px; bottom:calc(var(--nav-h) + 148px); z-index:1100;
-    width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
-    background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
-    box-shadow:var(--shadow-soft); font-size:22px;
-  }
+  #busBtn.on { border-color:rgba(255,45,45,.55) !important; box-shadow:var(--glow) !important; }
   #picOverlay {
     display:none; position:absolute; inset:0; z-index:4500;
     background:rgba(0,0,0,.72);
@@ -430,10 +430,12 @@
   <div class="stat"><div class="big" id="etaVal">–</div><div class="lbl">walking</div></div>
   <button id="endBtn">End</button>
 </div>
-<button id="locBtn" title="Find me">📍</button>
+<div id="tools">
+  <button id="locBtn" title="Find me">📍</button>
+  <button id="busBtn" title="Wolfline buses">🚌</button>
+  <button id="usBtn" title="pics of us">💕</button>
+</div>
 <button id="lostBtn">im lost 😭</button>
-<button id="busBtn" title="Wolfline routes">🚌</button>
-<button id="usBtn" title="pics of us">💕</button>
 <div id="toast"></div>
 
 <!-- polaroid pic of us -->
@@ -476,6 +478,7 @@
   <div id="grab"></div>
   <input id="searchBox" type="text" placeholder="search anywhere on campus…" autocomplete="off">
   <div id="chips"></div>
+  <div id="slicers"></div>
   <div id="placeList"></div>
   <div id="hint">tip: press &amp; hold the map to drop ur own pin — save ur friends' dorms 👯</div>
 </div>
@@ -485,17 +488,19 @@
   <div class="scrTitle">ur week 📅</div>
   <div id="wxCard"></div>
   <button id="hungryBtn">🍔 I'M FUCKING HUNGRY 😤</button>
-  <button id="homeBtn">🏠 take me home (Carroll Hall)</button>
   <div id="utilRow">
-    <button id="nextBusBtn">🚏 next bus</button>
-    <button id="studyBtn">📚 study spot</button>
-    <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener">🧺 laundry</a>
+    <button id="homeBtn"><span>🏠</span>home</button>
+    <button id="nextBusBtn"><span>🚏</span>next bus</button>
+    <button id="studyBtn"><span>📚</span>study</button>
+    <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener"><span>🧺</span>laundry</a>
   </div>
-  <div id="datesCard"></div>
   <div id="semBar">
     <div id="semBarTxt"><span id="semPct"></span><span id="semLeft"></span></div>
     <div id="semTrack"><div id="semFill"></div></div>
   </div>
+  <div class="secLbl">coming up 👀</div>
+  <div id="datesCard"></div>
+  <div class="secLbl">ur classes 🎓</div>
   <div id="dayPills"></div>
   <div id="dayLabel"></div>
   <div id="classList"></div>
@@ -536,6 +541,7 @@
     <button class="evPill on" data-when="today">today</button>
     <button class="evPill" data-when="week">this week</button>
   </div>
+  <div id="evCats"></div>
   <div id="evList"></div>
 </div>
 
@@ -914,13 +920,18 @@ let activeChip='all';
   mk('all','✨ All');
   Object.keys(CATS).forEach(k=>mk(k,CATS[k].chip));
 })();
+let openOnly=false, sortNear=true;
 function renderList(filter=''){
   const f=filter.trim().toLowerCase();
   $('placeList').innerHTML='';
-  allPlaces()
+  let rows=allPlaces()
     .filter(p=>activeChip==='all'||p.cat===activeChip)
     .filter(p=>!f||p.name.toLowerCase().includes(f)||(p.sub||'').toLowerCase().includes(f))
-    .forEach(p=>{
+    .filter(p=>!openOnly||openNow(p)!==false);
+  if(sortNear && myPos) rows=rows.slice().sort((a,b)=>haversine(myPos,[a.lat,a.lng])-haversine(myPos,[b.lat,b.lng]));
+  else rows=rows.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  if(!rows.length){ $('placeList').innerHTML='<div class="evNone" style="padding:20px 0">nothing matches that 🤷‍♀️</div>'; return; }
+  rows.forEach(p=>{
       const d=document.createElement('div');
       d.className='place';
       const eta=walkEta(p);
@@ -931,6 +942,16 @@ function renderList(filter=''){
       $('placeList').appendChild(d);
     });
 }
+/* slicers above the list: sort + open-now */
+(function buildSlicers(){
+  const wrap=$('slicers'); if(!wrap) return;
+  const mk=(lbl,on,fn)=>{ const b=document.createElement('button');
+    b.className='chip sl'+(on?' on':''); b.textContent=lbl;
+    b.onclick=()=>{ fn(b); renderList($('searchBox').value); }; wrap.appendChild(b); return b; };
+  mk('📍 nearest', true, b=>{ sortNear=!sortNear; b.classList.toggle('on',sortNear);
+    b.textContent=sortNear?'📍 nearest':'🔤 A–Z'; });
+  mk('🟢 open now', false, b=>{ openOnly=!openOnly; b.classList.toggle('on',openOnly); });
+})();
 renderList();
 renderDatesCard();
 $('searchBox').addEventListener('input', e=>renderList(e.target.value));
@@ -1135,14 +1156,37 @@ async function fetchEvents(){
   return EVENTS_LIVE;
 }
 function evOnDay(e,d){ if(!e.start) return false; const s=new Date(e.start); return s.toDateString()===d.toDateString(); }
+/* category slicers — the list runs ~100 events, she needs to cut it down */
+const EV_CATS=[
+  { k:'all',  lbl:'✨ all',       t:()=>true },
+  { k:'food', lbl:'🍕 free food', t:e=>e.food },
+  { k:'free', lbl:'🆓 free',      t:e=>e.free },
+  { k:'music',lbl:'🎵 music',     t:e=>/concert|music|band|jazz|choir|orchestra|sing|dj|open mic/i.test(e.title) },
+  { k:'sport',lbl:'🏈 sports',    t:e=>/game|football|basketball|soccer|volleyball|tailgate|match|tournament|intramural/i.test(e.title) },
+  { k:'social',lbl:'🎉 social',   t:e=>/party|social|mixer|dance|festival|fair|night|movie|trivia|game night|bingo/i.test(e.title) },
+  { k:'rec',  lbl:'💪 rec',       t:e=>/yoga|fitness|workout|run|climb|rec|swim|pilates|cycle|self.?defense/i.test(e.title) },
+  { k:'arts', lbl:'🎨 arts',      t:e=>/art|gallery|exhibit|museum|craft|paint|pottery|theatre|theater|dance/i.test(e.title) },
+];
+let evCat='all';
 function evFiltered(){
   const now=new Date();
-  if(evWhen==='today'){
-    return EVENTS_LIVE.filter(e=>evOnDay(e,now)).sort((a,b)=>new Date(a.start)-new Date(b.start));
-  }
-  const end=new Date(now.getTime()+7*86400000);
-  return EVENTS_LIVE.filter(e=>{ const s=new Date(e.start); return s>=new Date(now.toDateString()) && s<=end; })
-    .sort((a,b)=>new Date(a.start)-new Date(b.start));
+  const cat=EV_CATS.find(c=>c.k===evCat)||EV_CATS[0];
+  let list;
+  if(evWhen==='today') list=EVENTS_LIVE.filter(e=>evOnDay(e,now));
+  else { const end=new Date(now.getTime()+7*86400000);
+    list=EVENTS_LIVE.filter(e=>{ const s=new Date(e.start); return s>=new Date(now.toDateString()) && s<=end; }); }
+  return list.filter(cat.t).sort((a,b)=>new Date(a.start)-new Date(b.start));
+}
+function buildEvCats(){
+  const wrap=$('evCats'); if(!wrap||wrap.childElementCount) return;
+  EV_CATS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='chip'+(c.k===evCat?' on':''); b.textContent=c.lbl;
+    b.onclick=()=>{ evCat=c.k;
+      wrap.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));
+      renderEvents(); };
+    wrap.appendChild(b);
+  });
 }
 function evTimeLbl(e){
   const s=new Date(e.start);
@@ -1152,11 +1196,12 @@ function evTimeLbl(e){
 }
 async function renderEvents(){
   const list=$('evList'); if(!list) return;
+  buildEvCats();
   list.innerHTML='<div class="evNone">loading campus events… 🎉</div>';
   await fetchEvents();
   const evs=evFiltered();
   drawEventMarkers();
-  if(!evs.length){ list.innerHTML=`<div class="evNone">nothing on the campus calendar ${evWhen==='today'?'today':'this week'} 😴<br>check the frat instas 📸</div>`; return; }
+  if(!evs.length){ list.innerHTML=`<div class="evNone">nothing${evCat==='all'?'':' in that filter'} ${evWhen==='today'?'today':'this week'} 😴<br>${evCat==='all'?'check the frat instas 📸':'try ✨ all'}</div>`; return; }
   list.innerHTML='';
   evs.forEach(e=>{
     const d=document.createElement('div'); d.className='ev';
