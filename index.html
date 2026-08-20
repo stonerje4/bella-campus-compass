@@ -96,7 +96,7 @@
     position:absolute; right:14px; bottom:calc(var(--nav-h) + 84px); z-index:1100;
     display:flex; flex-direction:column; gap:9px;
   }
-  #tools button {
+  #tools button { -webkit-touch-callout:none; user-select:none; -webkit-user-select:none;
     width:52px; height:52px; border-radius:50%; border:.5px solid var(--hairline);
     background:var(--glass); backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);
     box-shadow:var(--shadow-soft); font-size:23px;
@@ -148,12 +148,15 @@
     display:none; flex-direction:column; overflow:hidden;
   }
   .screen.on { display:flex; }
-  #screenClasses { background:#0e0e11; padding:calc(16px + env(safe-area-inset-top)) 16px 12px; }
+  #screenClasses { background:#0e0e11; padding:calc(16px + env(safe-area-inset-top)) 16px 12px;
+    overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+  /* the screen itself scrolls now, so the class list must NOT be the only shrinker */
+  #screenClasses #classList { flex:0 0 auto; overflow:visible; }
   .scrTitle { font-size:26px; font-weight:900; color:var(--ink); margin-bottom:12px; flex:0 0 auto; }
   #homeBtn {
     width:100%; padding:14px; border-radius:14px;
     background:rgba(255,45,45,.1); color:var(--red); font-size:15px; font-weight:900;
-    margin-bottom:10px; border:1px solid rgba(255,45,45,.35); flex:0 0 auto;
+    border:1px solid rgba(255,45,45,.35); flex:0 0 auto;
   }
   #hungryBtn {
     width:100%; padding:14px; border:none; border-radius:14px;
@@ -1256,6 +1259,8 @@ const savedPlaces = JSON.parse(localStorage.getItem('bellaSpots') || '[]');
 savedPlaces.forEach(p => p.cat = 'saved');
 const allPlaces = () => PLACES.concat(savedPlaces);
 const findPlace = name => allPlaces().find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
+/* const globals aren't window properties — expose for modules that look there */
+window.PLACES=PLACES; window.allPlaces=allPlaces;
 
 const placeMarkers = L.layerGroup().addTo(map);
 function drawPlaceMarkers() {
@@ -1350,6 +1355,8 @@ function renderList(filter=''){
 })();
 renderList();
 renderDatesCard();
+/* live dining hours arrive async — repaint the list when they do */
+window.onDiningHoursUpdate=()=>{ try{ renderList($('searchBox').value||''); }catch(e){} };
 $('searchBox').addEventListener('input', e=>renderList(e.target.value));
 
 /* ---------- weather (Open-Meteo — free, no key, auto-updates every open) ---------- */
@@ -2449,7 +2456,7 @@ let scootFails=0, scootBound=false;
 const scootEsc = s => String(s==null?'':s).replace(/[<>&"']/g, c =>
   ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 const scootPct   = b => Math.max(0, Math.min(100, Math.round((+b.current_fuel_percent||0)*100)));
-const scootMiles = b => (Math.max(0,+b.current_range_meters||0)/1609.34);
+const scootMiles = b => (Math.max(0, +(b.range!=null?b.range:b.current_range_meters)||0)/1609.34);
 const scootTier  = p => p>60 ? 'hi' : p>=30 ? 'mid' : 'lo';
 function scootAgo(ts){
   const s = Math.max(0, Math.round(Date.now()/1000 - (+ts||0)));
@@ -2495,7 +2502,8 @@ async function scootLoad(){
     const d = haversine(anchor,[lat,lng]);
     if(!onCampus && !(myPos && d<=SPIN_NEAR_M)) continue;
     out.push({
-      id: String(b.bike_id||`${lat},${lng}`),
+      /* Spin rotates bike_id on every request — position is the stable identity */
+      id: `${lat.toFixed(5)},${lng.toFixed(5)}`,
       lat, lng, d,
       pct: scootPct(b),
       range: Math.max(0,+b.current_range_meters||0),
@@ -2539,7 +2547,8 @@ function scootDraw(list){
       m.setLatLng([v.lat,v.lng]);
       m.setIcon(scootIcon(v));
       m._v = v;
-      m.setPopupContent(scootPopup(v));
+      if(!(m.getPopup&&m.getPopup()&&m.getPopup().isOpen&&m.getPopup().isOpen()))
+        m.setPopupContent(scootPopup(v));   /* don't re-render an OPEN popup: it drops the button handler */
     } else {
       m = L.marker([v.lat,v.lng],{ icon:scootIcon(v), zIndexOffset:400 });
       m._v = v;
@@ -2656,7 +2665,10 @@ async function scootNearest(){
   if(!pick){
     const any = scootList[0];
     scootRideTo(any);
-    toast(`only dying ones nearby 🪫 closest is ${fmtDist(any.d)} away at ${any.pct}%`, 4500);
+    const lowBatt = any.pct <= 25;
+    toast(lowBatt
+      ? `only dying ones nearby 🪫 closest is ${fmtDist(any.d)} away at ${any.pct}%`
+      : `nothing nearby has the range to get u home 😕 closest is ${fmtDist(any.d)} away`, 4500);
     return;
   }
   scootRideTo(pick);
@@ -2716,8 +2728,10 @@ function initScooters(){
   if(btn){
     let held=false, ht=null;
     btn.onclick = ()=>{ if(held){ held=false; return; } scootToggle(true); };
+    /* iOS may never fire the synthetic click after a long-press — don't swallow her next tap */
+    const clearHeld = ()=>{ setTimeout(()=>{ held=false; }, 700); };
     /* press & hold the 🛴 button = jump straight to the nearest one */
-    const down = ()=>{ ht=setTimeout(()=>{ held=true; scootNearest(); }, 550); };
+    const down = ()=>{ ht=setTimeout(()=>{ held=true; scootNearest(); clearHeld(); }, 550); };
     const up   = ()=>{ if(ht){ clearTimeout(ht); ht=null; } };
     btn.addEventListener('touchstart', down, {passive:true});
     btn.addEventListener('touchend', up);

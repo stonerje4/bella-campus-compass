@@ -16,7 +16,7 @@ const SHELL = [
 ];
 const LIVE_ONLY = ['tile.openstreetmap.org', 'routing.openstreetmap.de', 'api.open-meteo.com',
                    'overpass', 'passio3.com', 'calendar.ncsu.edu', 'api.weather.gov',
-                   'wellrec.dasa.ncsu.edu', 'gbfs.spin.pm', 'dining.ncsu.edu',
+                   'wellrec.dasa.ncsu.edu', 'gbfs.spin.pm', 'dining.ncsu.edu', 'emergency.ncsu.edu',
                    'gopack.com', 'site.api.espn.com'];
 
 self.addEventListener('install', e => {
