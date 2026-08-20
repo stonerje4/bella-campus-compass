@@ -2,7 +2,7 @@
    Strategy: network-first for the app shell (updates always win, cache is the
    backup when campus wifi dies); cache-first for photos/icons/leaflet; never
    cache live data (tiles, routing, weather, overpass). */
-const CACHE = 'bcc-v2';   /* bumped: v1 could hold a stale weather alert / events */
+const CACHE = 'bcc-v3';   /* bumped: new live feeds must never be served from cache */
 const SHELL = [
   './',
   'index.html',
@@ -15,7 +15,9 @@ const SHELL = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
 const LIVE_ONLY = ['tile.openstreetmap.org', 'routing.openstreetmap.de', 'api.open-meteo.com',
-                   'overpass', 'passio3.com', 'calendar.ncsu.edu', 'api.weather.gov'];
+                   'overpass', 'passio3.com', 'calendar.ncsu.edu', 'api.weather.gov',
+                   'wellrec.dasa.ncsu.edu', 'gbfs.spin.pm', 'dining.ncsu.edu',
+                   'gopack.com', 'site.api.espn.com'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

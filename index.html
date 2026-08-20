@@ -202,6 +202,67 @@
     text-align:center; text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:3px;
   }
   #utilRow span { font-size:19px; line-height:1; }
+  /* ---- group fitness @ carmichael ---- */
+  #gfList { flex:0 0 auto; max-height:210px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+            margin-bottom:12px; scrollbar-width:none; }
+  #gfList::-webkit-scrollbar { display:none; }
+  #gfList .cls.gf { padding:10px; margin-bottom:6px; cursor:pointer; }
+  #gfList .cls.gf .time { width:60px; flex:0 0 60px; font-size:13px; }
+  #gfList .cls.gf .course { font-size:14px; }
+  #gfList .cls.gf .where { font-size:12px; }
+  #gfList .cls.gf .go { padding:9px 14px; font-size:13px; }
+  .gfBadge { display:inline-block; margin-left:6px; padding:2px 6px; border-radius:6px;
+             background:var(--red-grad); color:#fff; font-size:9px; font-weight:900;
+             letter-spacing:.5px; vertical-align:middle; }
+  .gfBadge.now { background:#e67e22; }
+/* ==========================================================================
+   WOLFPACK SPORTS — paste into the <style> block in index.html, right after
+   the .gfBadge rules (same badge family, same dark palette).
+   The game rows reuse the existing .bigDate card, so this is only the extras.
+   ========================================================================== */
+
+/* away games are still worth knowing about, just not worth walking to */
+.awayTag {
+  display:inline-block; margin-left:6px; padding:2px 6px; border-radius:6px;
+  background:#232329; color:#8a8a92; font-size:9px; font-weight:900;
+  letter-spacing:.5px; vertical-align:middle;
+}
+
+/* a game today gets the red treatment — same glow the app already uses */
+.bigDate.gameday {
+  border:1px solid rgba(255,45,45,.35);
+  background:rgba(255,45,45,.07);
+  box-shadow:var(--glow);
+  border-radius:14px; padding:10px 12px;
+}
+.bigDate.gameday .when { color:#fff; }
+
+/* optional: a scrollable "all sports" list if you ever give it its own section */
+#sportsList {
+  flex:0 0 auto; max-height:260px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  margin-bottom:12px; scrollbar-width:none;
+}
+#sportsList::-webkit-scrollbar { display:none; }
+#sportsList .bigDate { cursor:pointer; }
+
+/* sport filter chips, if you add them later */
+.sportChip {
+  flex:0 0 auto; padding:7px 11px; border:.5px solid var(--hairline); border-radius:11px;
+  background:#1e1e25; color:#8a8a92; font-size:12px; font-weight:800;
+}
+.sportChip.on { background:var(--red-grad); border-color:transparent; color:#fff; box-shadow:var(--glow); }
+
+/* quiet fallback line when gopack is unreachable / nothing scheduled */
+.sportsEmpty {
+  padding:12px 14px; background:var(--surface); border:1px solid rgba(255,255,255,.07);
+  border-radius:14px; font-size:13px; font-weight:700; color:var(--ink-dim);
+}
+  .gfNote { padding:12px 14px; background:var(--surface); border:1px solid rgba(255,255,255,.07);
+            border-radius:14px; font-size:13px; font-weight:700; color:#c9c9d2; }
+  .gfNote.sub { margin-top:6px; background:transparent; border:none; padding:6px 4px 0;
+                font-size:12px; color:var(--ink-dim); }
+  .gfMore { width:100%; padding:9px; border:.5px dashed var(--hairline); border-radius:12px;
+            background:transparent; color:#8a8a92; font-size:12px; font-weight:800; }
   .secLbl { flex:0 0 auto; font-size:11px; font-weight:900; color:#6c6c74;
     text-transform:uppercase; letter-spacing:.7px; margin:2px 0 7px; }
   #datesCard { flex:0 0 auto; margin-bottom:10px; }
@@ -405,6 +466,47 @@
     font-size:19px; font-weight:900; padding:17px 44px;
     box-shadow:0 6px 24px rgba(0,0,0,.5), 0 0 26px rgba(255,45,45,.35);
   }
+
+/* ============ 🛴 spin scooters ============ */
+/* the tool-stack button: same shell as #locBtn/#busBtn, just the lit state */
+#scootBtn.on { border-color:rgba(120,230,150,.55) !important; box-shadow:0 0 14px rgba(120,230,150,.35) !important; }
+
+/* map pin — battery colour is the whole point, so it's the ring + the bar */
+.scoot-pin {
+  position:relative; width:30px; height:30px; border-radius:50%;
+  background:#fff; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.35), 0 0 0 .5px rgba(0,0,0,.06);
+  border:2.5px solid #7de08e;
+}
+.scoot-pin.hi  { border-color:#3ddc84; }
+.scoot-pin.mid { border-color:#ffb02e; }
+.scoot-pin.lo  { border-color:#ff453a; }
+.scoot-gl { font-size:15px; line-height:1; }
+.scoot-bar {
+  position:absolute; left:4px; right:4px; bottom:-5px; height:3px;
+  border-radius:2px; background:rgba(0,0,0,.28); overflow:hidden;
+}
+.scoot-bar b { display:block; height:100%; border-radius:2px; background:currentColor; }
+.scoot-pin.hi  .scoot-bar b { background:#3ddc84; }
+.scoot-pin.mid .scoot-bar b { background:#ffb02e; }
+.scoot-pin.lo  .scoot-bar b { background:#ff453a; }
+
+/* popup body — matches the bus popup type scale */
+.scoot-pop { font-size:12px; color:#9a9aa2; margin-top:3px; }
+.scoot-ago { font-size:11px; color:#6c6c74; margin-top:5px; }
+.scoot-dot {
+  display:inline-block; width:8px; height:8px; border-radius:50%;
+  margin-right:5px; vertical-align:middle; background:#3ddc84;
+}
+.scoot-dot.hi  { background:#3ddc84; }
+.scoot-dot.mid { background:#ffb02e; }
+.scoot-dot.lo  { background:#ff453a; }
+.scoot-go {
+  display:block; width:100%; margin-top:8px; padding:8px 10px;
+  border:1px solid rgba(255,45,45,.35); border-radius:11px;
+  background:rgba(255,45,45,.1); color:var(--red);
+  font-size:13px; font-weight:900; cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -433,6 +535,7 @@
 <div id="tools">
   <button id="locBtn" title="Find me">📍</button>
   <button id="busBtn" title="Wolfline buses">🚌</button>
+  <button id="scootBtn" title="Spin scooters — hold for the nearest one">🛴</button>
   <button id="usBtn" title="pics of us">💕</button>
 </div>
 <button id="lostBtn">im lost 😭</button>
@@ -494,6 +597,8 @@
     <button id="studyBtn"><span>📚</span>study</button>
     <a id="laundryBtn" href="https://housing.dasa.ncsu.edu/resident-resources/laundry" target="_blank" rel="noopener"><span>🧺</span>laundry</a>
   </div>
+  <div class="secLbl">gym classes 💪</div>
+  <div id="gfList"></div>
   <div id="semBar">
     <div id="semBarTxt"><span id="semPct"></span><span id="semLeft"></span></div>
     <div id="semTrack"><div id="semFill"></div></div>
@@ -733,6 +838,297 @@ const PLACES = [
   { name:"Lake Raleigh",           cat:"fun", emoji:"🌅", sub:"Centennial · sunset walks",   lat:35.76833, lng:-78.67847 },
 ];
 
+/* ============= OFF-CAMPUS RESTAURANT HOURS (OpenStreetMap) ============= */
+/* generated by extract-hours.js — do not hand-edit */
+var OSM_HOURS = {
+  "Raising Cane's": {
+    "oh": "10:00-03:00",
+    "osm": "node/9458735316"
+  },
+  "Chick-fil-A": {
+    "oh": "Mo-Th 07:30-20:00; Fr 07:30-15:00; Su off",
+    "osm": "node/9072361139"
+  },
+  "Chipotle": {
+    "oh": "Mo-Su 10:45-23:00",
+    "osm": "node/5282391621"
+  },
+  "Gonza Tacos y Tequila": {
+    "oh": "Su 11:00-16:00,17:00-21:30; Mo-Th 11:30-14:00,17:00-21:30; Fr 11:30-14:00,17:00-22:30; Sa 11:00-16:00,17:00-22:30",
+    "osm": "node/3840045003"
+  },
+  "Guasaca": {
+    "oh": "Mo-Su 11:00-21:00",
+    "osm": "node/8891851191"
+  },
+  "Slice of New York Pizza": {
+    "oh": "Mo-Th 10:00-22:00; Su 11:00-21:00; Fr,Sa 10:00-22:00",
+    "osm": "node/6379816915"
+  },
+  "Bojangles'": {
+    "oh": "Mo-Th,Su 05:30-22:00; Fr-Sa 05:30-23:00",
+    "osm": "way/47917778"
+  },
+  "Taco Bell": {
+    "oh": "07:00-02:00",
+    "osm": "way/47948196"
+  },
+  "Waffle House": {
+    "oh": "24/7",
+    "osm": "way/47933150"
+  },
+  "Snoopy's": {
+    "oh": "Mo-Sa 10:30-22:00, Su 11:00-22:00",
+    "osm": "way/47918043"
+  },
+  "Tupelo Honey": {
+    "oh": "Mo-Fr 11:00-21:00; Sa,Su 09:00-21:00",
+    "osm": "node/4177433961"
+  },
+  "Sammy's Tap & Grill": {
+    "oh": "Th-Sa 11:00-24:00; Su-We 11:00-24:00",
+    "osm": "way/47933061"
+  },
+  "Tin Roof": {
+    "oh": "Su, Tu 16:00-00:00; We-Sa 16:00-02:00",
+    "osm": "node/13879237701"
+  },
+  "Raleigh Beer Garden": {
+    "oh": "Mo-Su 12:00-12:00",
+    "osm": "node/6484113986"
+  }
+};
+
+/* ============================================================================
+   RESTAURANT HOURS — opening_hours parser + runtime overlay
+   Data source: OpenStreetMap via Overpass API, extracted at BUILD time into
+   hours-data.js. Nothing here touches the network — works fully offline.
+
+   Entry point: initRestaurantHours()   (call once, after PLACES is defined)
+
+   Design: overlay rather than inline `hrs:` on each pin. Justification in
+   NOTES.md — short version: the OSM-derived hours stay in one regenerable
+   block keyed by pin name, so re-running the extractor is a one-file diff,
+   and pins with no OSM hours are never touched (hrs stays undefined =>
+   openNow() returns null => the UI shows nothing, per the no-guessing rule).
+   ========================================================================= */
+
+/* --- weekday tables ------------------------------------------------------ */
+/* app convention: 0=Sun … 6=Sat (matches Date#getDay) */
+var OH_DAY_IDX = { Su:0, Mo:1, Tu:2, We:3, Th:4, Fr:5, Sa:6 };
+/* OSM lists day ranges in Mo..Su order; Su-We must wrap through that order */
+var OH_DAY_SEQ = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+var OH_DAY_TOKEN = '(?:Mo|Tu|We|Th|Fr|Sa|Su)';
+var OH_RE_DAYSPEC = new RegExp('^(' + OH_DAY_TOKEN + ')(?:-(' + OH_DAY_TOKEN + '))?$');
+var OH_RE_LEADING_DAYS = new RegExp('^(' + OH_DAY_TOKEN + '(?:-' + OH_DAY_TOKEN + ')?)\\s*([\\s\\S]*)$');
+var OH_RE_TIMESPAN = /^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/;
+
+/* expand "Mo-Th" / "Su" into [dayIdx,...] ; null if unparseable */
+function ohExpandDaySpec(spec){
+  var m = OH_RE_DAYSPEC.exec(spec);
+  if(!m) return null;
+  if(!m[2]) return [OH_DAY_IDX[m[1]]];
+  var a = OH_DAY_SEQ.indexOf(m[1]), b = OH_DAY_SEQ.indexOf(m[2]);
+  if(a < 0 || b < 0) return null;
+  var out = [], i = a;
+  for(;;){
+    out.push(OH_DAY_IDX[OH_DAY_SEQ[i]]);
+    if(i === b) break;
+    i = (i + 1) % 7;
+    if(out.length > 7) return null; /* paranoia */
+  }
+  return out;
+}
+
+/* "10:45-23:00" -> [645, 1380] in raw form (end NOT yet normalised) */
+function ohParseTimespan(s){
+  var m = OH_RE_TIMESPAN.exec(s.trim());
+  if(!m) return null;
+  var h1 = +m[1], m1 = +m[2], h2 = +m[3], m2 = +m[4];
+  if(m1 > 59 || m2 > 59 || h1 > 24 || h2 > 24) return null;
+  return [h1 * 60 + m1, h2 * 60 + m2];
+}
+
+/* Split one rule-chunk on commas, classifying each comma as either a
+   day-list separator, a time-list separator, or a rule separator.
+   Heuristic (covers every form present in our data, see NOTES.md):
+   a comma starts a NEW rule only when the following part begins with a day
+   token AND the current rule has already collected at least one timespan.
+     "Su, Tu 16:00-00:00"            -> one rule, days Su+Tu
+     "Mo-Sa 10:30-22:00, Su 11:00-22:00" -> two rules
+     "Su 11:00-16:00,17:00-21:30"    -> one rule, two spans          */
+function ohSplitChunk(chunk){
+  var parts = chunk.split(',');
+  var rules = [], cur = null;
+  for(var i = 0; i < parts.length; i++){
+    var raw = parts[i].trim();
+    if(!raw) continue;
+    var days = null, rest = raw;
+    var lm = OH_RE_LEADING_DAYS.exec(raw);
+    if(lm){ days = lm[1]; rest = lm[2].trim(); }
+    if(days && cur && cur.spans.length){ cur = null; }      /* rule separator */
+    if(!cur){ cur = { days: [], spans: [], off: false, bad: false }; rules.push(cur); }
+    if(days){
+      var d = ohExpandDaySpec(days);
+      if(!d){ cur.bad = true; } else { cur.days = cur.days.concat(d); }
+    }
+    if(rest){
+      if(/^(off|closed)$/i.test(rest)){ cur.off = true; }
+      else {
+        var sp = ohParseTimespan(rest);
+        if(!sp) cur.bad = true; else cur.spans.push(sp);
+      }
+    }
+  }
+  return rules;
+}
+
+/* ---------------------------------------------------------------------------
+   parseOpeningHours(str)
+     -> { 0:[[startMin,endMin],...], ... }  keyed by Date#getDay
+     -> null if the string uses syntax we deliberately do not support
+   A day present with an empty array means "explicitly closed" (openNow=false).
+   A day absent means "unknown" (openNow=null).
+   Past-midnight closes are emitted TWICE, see NOTES.md:
+     - on the opening day with the end extended past 1440 (1620 = 3am)
+     - on the following day as [0, end] so `m>=a && m<b` matches at 1am
+   fmt12() in the app already does `min % 1440`, so 1620 renders "3:00am".
+--------------------------------------------------------------------------- */
+function parseOpeningHours(str){
+  if(typeof str !== 'string') return null;
+  var s = str.trim();
+  if(!s) return null;
+
+  if(s === '24/7') {
+    var all = {};
+    for(var d0 = 0; d0 < 7; d0++) all[d0] = [[0, 1440]];
+    return all;
+  }
+
+  /* unsupported syntax -> refuse the whole string rather than half-guess */
+  if(/\|\||sunrise|sunset|week\s|"|\bPH\b|\bSH\b|\[|\d{4}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/.test(s)) return null;
+
+  var base = {};                                   /* dayIdx -> [[s,e],...] raw */
+  var chunks = s.split(';');
+  for(var c = 0; c < chunks.length; c++){
+    var chunk = chunks[c].trim();
+    if(!chunk) continue;
+    var rules = ohSplitChunk(chunk);
+    for(var r = 0; r < rules.length; r++){
+      var rule = rules[r];
+      if(rule.bad) return null;
+      var days = rule.days.length ? rule.days : [0,1,2,3,4,5,6]; /* no day prefix = every day */
+      if(rule.off){
+        for(var i2 = 0; i2 < days.length; i2++) base[days[i2]] = [];   /* explicit closed */
+        continue;
+      }
+      if(!rule.spans.length) return null;   /* bare day with no times: ambiguous */
+      for(var j = 0; j < days.length; j++) base[days[j]] = rule.spans.slice(); /* later rule overrides */
+    }
+  }
+
+  /* second pass: normalise ends + spill past-midnight onto the next day */
+  var out = {};
+  for(var k in base) if(Object.prototype.hasOwnProperty.call(base, k)) out[k] = [];
+  var spill = {};
+  for(var day in base){
+    if(!Object.prototype.hasOwnProperty.call(base, day)) continue;
+    var spans = base[day];
+    for(var q = 0; q < spans.length; q++){
+      var st = spans[q][0], en = spans[q][1];
+      if(en === 0 && st > 0) en = 1440;              /* "16:00-00:00" = closes midnight */
+      if(en === st) return null;                     /* ambiguous (see NOTES: Raleigh Beer Garden) */
+      if(en < st){                                   /* past midnight */
+        out[day].push([st, en + 1440]);
+        var nx = (+day + 1) % 7;
+        (spill[nx] = spill[nx] || []).push([0, en]);
+      } else {
+        out[day].push([st, en]);
+      }
+    }
+  }
+  /* spill only onto days we already know about; spilling onto an unknown day
+     would turn "unknown" into "closed for the rest of the day", which is a lie */
+  for(var sd in spill){
+    if(!Object.prototype.hasOwnProperty.call(spill, sd)) continue;
+    if(!Object.prototype.hasOwnProperty.call(out, sd)) continue;
+    out[sd] = spill[sd].concat(out[sd]);
+  }
+
+  var any = false;
+  for(var z in out){ if(Object.prototype.hasOwnProperty.call(out, z)) { any = true; break; } }
+  return any ? out : null;
+}
+
+/* ---------------------------------------------------------------------------
+   initRestaurantHours() — merge the static OSM hours onto matching PLACES.
+   Safe to call more than once. Never overwrites hours a pin already has
+   (campus dining halls keep their dining.ncsu.edu hours).
+--------------------------------------------------------------------------- */
+function initRestaurantHours(){
+  try{
+    if(typeof OSM_HOURS === 'undefined' || !OSM_HOURS) return 0;
+    if(typeof PLACES === 'undefined' || !PLACES || !PLACES.length) return 0;
+    var n = 0;
+    for(var i = 0; i < PLACES.length; i++){
+      var p = PLACES[i];
+      if(p.hrs) continue;                          /* hand-verified hours win */
+      var rec = OSM_HOURS[p.name];
+      if(!rec || !rec.oh) continue;
+      var hrs = parseOpeningHours(rec.oh);
+      if(!hrs) continue;                           /* unparseable -> show nothing */
+      p.hrs = hrs;
+      p.hrsSrc = 'osm';
+      n++;
+    }
+    return n;
+  }catch(e){
+    /* never let hours break the map */
+    if(typeof console !== 'undefined' && console.warn) console.warn('restaurant hours skipped:', e);
+    return 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   openLabel(p) — OPTIONAL cosmetic helper for the place list.
+   The app currently renders `open til ${closesAt(p)}`. For a 24/7 place the
+   range is [0,1440] and closesAt() says "12:00am", which reads as "closes at
+   midnight" — wrong for Waffle House. This returns "open 24h" instead.
+   See NOTES.md step 3 (optional) for the exact one-line swap.
+--------------------------------------------------------------------------- */
+function ohFmt12(min){                       /* same math as the app's fmt12 */
+  min = ((min % 1440) + 1440) % 1440;
+  var h = Math.floor(min/60), mm = min%60;
+  var ap = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  return h + ':' + String(mm).padStart(2,'0') + ap;
+}
+function openLabel(p, now){
+  now = now || new Date();
+  var ranges = p && p.hrs && p.hrs[now.getDay()];
+  if(!ranges) return '';
+  var m = now.getHours()*60 + now.getMinutes();
+  var r = null;
+  for(var i = 0; i < ranges.length; i++){
+    if(m >= ranges[i][0] && m < ranges[i][1]){ r = ranges[i]; break; }
+  }
+  if(!r) return '';
+  if(r[0] === 0 && r[1] === 1440) return 'open 24h';
+  return 'open til ' + ohFmt12(r[1]);
+}
+
+/* node/test interop — harmless in the browser */
+if(typeof module !== 'undefined' && module.exports){
+  module.exports = {
+    parseOpeningHours: parseOpeningHours,
+    initRestaurantHours: initRestaurantHours,
+    openLabel: openLabel
+  };
+}
+initRestaurantHours();
+
+
 /* ==========================================================================
    BELLA'S FALL SCHEDULE  (day: 1=Mon … 5=Fri; min = minutes since midnight)
    ========================================================================== */
@@ -804,7 +1200,7 @@ function renderDatesCard(){
     const days=Math.round((e.dt-today)/86400000);
     const when=days<0?'NOW':days===0?'TODAY':days===1?'tmrw':`in ${days}d`;
     return `<div class="bigDate"><div><div class="what">${e.what}</div><div class="sub2">${e.sub}</div></div><div class="when">${when}</div></div>`;
-  }).join('') + packHtml() + deadlineHtml();
+  }).join('') + packHtml() + (typeof sportsHtml==='function' ? sportsHtml(2) : '') + deadlineHtml();
 }
 
 /* ---------- helpers ---------- */
@@ -1260,6 +1656,7 @@ async function fetchPack(){
       us:us&&us.score, them:them&&them.score,
       themName:(them&&them.team&&(them.team.abbreviation||them.team.displayName))||'',
       tv:(c.broadcasts&&c.broadcasts[0]&&((c.broadcasts[0].media&&c.broadcasts[0].media.shortName)||(c.broadcasts[0].names||[])[0]))||'' };
+    if (typeof setFootballHandled==='function') setFootballHandled(PACK.date);
     renderDatesCard();
   }catch(e){ /* espn hiccup — card just won't show */ }
 }
@@ -1274,8 +1671,440 @@ function packHtml(){
     `<div class="sub2">${PACK.home?'home · Carter-Finley':'away'}${PACK.tv?' · '+PACK.tv.replace(/[<>&]/g,''):''}${live&&PACK.detail?' · '+PACK.detail.replace(/[<>&]/g,''):''}</div></div>`+
     `<div class="when">${when}</div></div>`;
 }
+/* ================= ALL WOLFPACK SPORTS (gopack ICS) ================= */
+/* ==========================================================================
+   WOLFPACK SPORTS — every sport, not just football 🐺
+   Source: gopack.com's public ICS feed (SIDEARM). CORS is wide open (`*`),
+   the feed declares X-PUBLISHED-TTL:PT120M, so we hold it 2h and re-check
+   whenever Bella flips back to the app.
+
+   This COMPLEMENTS the ESPN football block (fetchPack/packHtml) — it never
+   replaces it. See NOTES.md for how the two stay out of each other's way.
+
+   Entry point: initSports()
+   Public API : upcomingGames(n) · gamesToday() · sportsHtml()
+   ========================================================================== */
+(function (global) {
+'use strict';
+
+/* ---------- feed config ---------- */
+const ICS_BASE = 'https://gopack.com/calendar.ashx/calendar.ics';
+/* The bare feed is gopack's "in season right now" set — as of Aug 2026 that's
+   football, volleyball, both soccers, W golf, W basketball, cross country.
+   The out-of-season sports only exist behind ?sport_id=N, so we pull those in
+   a lazy second pass so the first paint stays cheap on campus wifi. */
+const DEEP_SPORT_IDS = [1, 5, 7, 8, 11, 13, 17, 21];  /* baseball, M bball, M golf, rifle, M tennis, softball, W gym, W tennis */
+const TTL_MS = 2 * 60 * 60 * 1000;   /* PT120M */
+const LS_KEY = 'bcc_sports_v1';
+const ZONE = 'America/New_York';
+
+/* ==========================================================================
+   1. ICS PARSER — no libraries, RFC5545 enough for this feed
+   ========================================================================== */
+
+/* RFC5545 §3.1: long lines are folded, continuations begin with SP or HTAB.
+   Unfold FIRST or you get half a SUMMARY and a mystery line. */
+function unfold(text) {
+  const raw = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const out = [];
+  for (const line of raw) {
+    if (out.length && (line[0] === ' ' || line[0] === '\t')) out[out.length - 1] += line.slice(1);
+    else out.push(line);
+  }
+  return out;
+}
+
+/* RFC5545 §3.3.11 text escapes */
+function unesc(s) {
+  return String(s).replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+}
+
+/* split a value on commas that are NOT escaped ("Raleigh\, N.C., Dail Field") */
+function splitUnescaped(v) {
+  const parts = []; let cur = '';
+  for (let i = 0; i < v.length; i++) {
+    const c = v[i];
+    if (c === '\\') { cur += c + (v[i + 1] || ''); i++; }
+    else if (c === ',') { parts.push(cur); cur = ''; }
+    else cur += c;
+  }
+  parts.push(cur);
+  return parts;
+}
+
+/* DTSTART in both shapes:
+     DTSTART:20260911T230000Z            → real UTC instant
+     DTSTART;VALUE=DATE:20260919         → all-day, no clock
+     DTSTART;TZID=...:20260911T190000    → floating, assume Eastern (feed's home tz) */
+function parseDt(params, value) {
+  let m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(value);
+  if (m) return { at: new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6])), allDay: false };
+  m = /^(\d{4})(\d{2})(\d{2})$/.exec(value);
+  if (m) return { at: new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 16, 0, 0)), allDay: true }; /* noon-ish ET anchor */
+  m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/.exec(value);
+  if (m) {
+    /* floating local — nail it to Eastern by trial offset (handles DST) */
+    const guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    const off = guess - etWallClockMs(new Date(guess));
+    return { at: new Date(guess + off), allDay: /VALUE=DATE(?!-TIME)/.test(params) };
+  }
+  return null;
+}
+
+function parseIcs(text) {
+  const lines = unfold(text), events = [];
+  let ev = null;
+  for (const line of lines) {
+    if (line === 'BEGIN:VEVENT') { ev = {}; continue; }
+    if (line === 'END:VEVENT') { if (ev && ev.dt) events.push(ev); ev = null; continue; }
+    if (!ev) continue;
+    const c = line.indexOf(':'); if (c < 0) continue;
+    const left = line.slice(0, c), value = line.slice(c + 1);
+    const semi = left.indexOf(';');
+    const name = (semi < 0 ? left : left.slice(0, semi)).toUpperCase();
+    const params = semi < 0 ? '' : left.slice(semi + 1).toUpperCase();
+    if (name === 'UID') ev.uid = value;
+    else if (name === 'SUMMARY') ev.summary = unesc(value);
+    else if (name === 'URL') ev.url = value.replace(/&amp;/g, '&');
+    else if (name === 'LOCATION') ev.loc = splitUnescaped(value).map(p => unesc(p).trim()).filter(Boolean);
+    else if (name === 'DTSTART') { const d = parseDt(params, value); if (d) ev.dt = d; }
+  }
+  return events;
+}
+
+/* ==========================================================================
+   2. AMERICA/NEW_YORK — the feed is UTC, Bella is on Eastern, her phone
+      might be anywhere. Intl does the DST math so we don't have to.
+   ========================================================================== */
+const ET = new Intl.DateTimeFormat('en-US', {
+  timeZone: ZONE, hour12: false,
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+});
+function etParts(d) {
+  const o = {};
+  for (const p of ET.formatToParts(d)) if (p.type !== 'literal') o[p.type] = p.value;
+  let h = +o.hour; if (h === 24) h = 0;              /* en-US quirk: midnight = "24" */
+  return { y: +o.year, m: +o.month, d: +o.day, h: h, mi: +o.minute };
+}
+function etWallClockMs(d) { const p = etParts(d); return Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi, 0); }
+function etDayMs(d) { const p = etParts(d); return Date.UTC(p.y, p.m - 1, p.d); }
+function etMinutes(d) { const p = etParts(d); return p.h * 60 + p.mi; }
+function daysFromToday(d) { return Math.round((etDayMs(d) - etDayMs(new Date())) / 86400000); }
+
+/* ==========================================================================
+   3. SPORT DETECTION — order matters, women's before the generic word
+   ========================================================================== */
+const SPORTS = [
+  [/women'?s basketball/i,   "Women's Basketball", '🏀'],
+  [/men'?s basketball/i,     "Men's Basketball",   '🏀'],
+  [/football/i,              'Football',           '🏈'],
+  [/volleyball/i,            'Volleyball',         '🏐'],
+  [/women'?s soccer/i,       "Women's Soccer",     '⚽'],
+  [/men'?s soccer/i,         "Men's Soccer",       '⚽'],
+  [/soccer/i,                'Soccer',             '⚽'],
+  [/baseball/i,              'Baseball',           '⚾'],
+  [/softball/i,              'Softball',           '🥎'],
+  [/women'?s tennis/i,       "Women's Tennis",     '🎾'],
+  [/men'?s tennis/i,         "Men's Tennis",       '🎾'],
+  [/tennis/i,                'Tennis',             '🎾'],
+  [/women'?s golf/i,         "Women's Golf",       '⛳'],
+  [/men'?s golf/i,           "Men's Golf",         '⛳'],
+  [/golf/i,                  'Golf',               '⛳'],
+  [/gymnastics/i,            'Gymnastics',         '🤸'],
+  [/rifle/i,                 'Rifle',              '🎯'],
+  [/cross country/i,         'Cross Country',      '🏃'],
+  [/swimming|diving/i,       'Swimming & Diving',  '🏊'],
+  [/track/i,                 'Track & Field',      '🏃'],
+  [/wrestling/i,             'Wrestling',          '🤼']
+];
+function detectSport(summary) {
+  for (const [re, name, emoji] of SPORTS) if (re.test(summary)) return { sport: name, emoji: emoji };
+  return { sport: 'Wolfpack', emoji: '🐺' };
+}
+
+/* ==========================================================================
+   4. NORMALISE ONE VEVENT → a game we can render
+   ========================================================================== */
+const PREFIX_RE = /^NC State University\s+/i;
+const RESULT_RE = /^\s*\[[WLNT]\]\s*/;                 /* [W] / [L] / [N] result markers */
+/* the sport phrase as the FEED writes it, so we can chop it off the front */
+const SPORT_PHRASE_RE = /^(?:(?:Wo)?Men'?s\s+)?(?:Basketball|Football|Volleyball|Soccer|Baseball|Softball|Tennis|Golf|Gymnastics|Rifle|Cross Country|Swimming(?:\s*(?:&|and)\s*Diving)?|Track(?:\s*(?:&|and)\s*Field)?|Wrestling)\s*/i;
+/* gopack tacks promo copy onto opponents: " - Red Out | Giveaway: Pom Poms" */
+const PROMO_RE = /\s+[-–|]\s+.*$|\s*\|.*$/;
+
+/* gopack writes venues out in full ("James T. Valvano Arena at William Neal
+   Reynolds Coliseum"). Squash them to the short names — which double as the
+   pin names already in the app, so findPlace()/setDestination() just work. */
+const VENUES = [
+  [/reynolds coliseum/i,            'Reynolds Coliseum'],
+  [/carter-?finley/i,               'Carter-Finley Stadium'],
+  [/lenovo center|pnc arena/i,      'Lenovo Center'],
+  [/dail soccer/i,                  'Dail Soccer Field'],
+  [/dail softball/i,                'Dail Softball Stadium'],
+  [/doak field/i,                   'Doak Field'],
+  [/lonnie poole/i,                 'Lonnie Poole Golf Course'],
+  [/j\.?w\.?\s*isenhour|isenhour/i, 'Isenhour Tennis Center'],
+  [/weisiger[- ]brown/i,            'Weisiger-Brown']
+];
+function shortVenue(v) {
+  if (!v) return '';
+  for (const [re, name] of VENUES) if (re.test(v)) return name;
+  return v.length > 34 ? v.slice(0, 33).trim() + '…' : v;
+}
+
+function toGame(ev) {
+  const rawSummary = ev.summary || '';
+  const played = RESULT_RE.test(rawSummary);           /* feed already stamped a result */
+  let s = rawSummary.replace(RESULT_RE, '').replace(PREFIX_RE, '').trim();
+  const { sport, emoji } = detectSport(rawSummary);
+
+  /* opponent = whatever follows the vs/at joiner; if there's no joiner (Rifle
+     writes "Rifle  Kentucky") just chop the sport phrase off the front. */
+  const j = /\s+(vs\.?|at)\s+/i.exec(s);
+  let joiner = '', opponent;
+  if (j) { joiner = j[1].toLowerCase().replace('.', ''); opponent = s.slice(j.index + j[0].length); }
+  else { opponent = s.replace(SPORT_PHRASE_RE, ''); }
+  const exhibition = /\(exh\.?\)|exhibition/i.test(opponent);
+  opponent = opponent.replace(PROMO_RE, '').replace(/\s*\(exh\.?\)\s*/i, ' ').trim() || 'TBA';
+  if (exhibition) opponent += ' (exh)';
+  /* clean display title: "Women's Soccer vs Charlotte" */
+  s = s.replace(PROMO_RE, '').trim();
+
+  const loc = ev.loc || [];
+  const city = loc[0] || '';
+  const venue = shortVenue(loc.slice(1).join(', '));
+  /* home games say "Raleigh, N.C." (the feed also writes "Raleigh, NC") */
+  const home = /^raleigh\b/i.test(city) || (!city && joiner === 'vs');
+
+  const at = ev.dt.at, allDay = ev.dt.allDay;
+  return {
+    uid: ev.uid || (rawSummary + at.toISOString()),
+    date: at,                                  /* real instant */
+    allDay: allDay,
+    dayKey: (function () { const p = etParts(at); return p.y + '-' + String(p.m).padStart(2, '0') + '-' + String(p.d).padStart(2, '0'); })(),
+    minutes: allDay ? null : etMinutes(at),    /* minutes past midnight, Eastern */
+    sport: sport, emoji: emoji,
+    opponent: opponent,
+    title: s,                                  /* "Women's Soccer vs Duke" */
+    home: home,
+    where: home ? (venue || 'Raleigh') : (city || 'away'),
+    venue: venue,
+    city: city,
+    played: played,
+    url: ev.url || ''
+  };
+}
+
+/* ==========================================================================
+   5. FETCH + CACHE (2h, mirrored to localStorage so offline still shows something)
+   ========================================================================== */
+let GAMES = [];            /* sorted, deduped */
+let fetchedAt = 0;
+let inFlight = null;
+let deepDone = false;
+
+function mergeGames(list) {
+  const byUid = new Map();
+  for (const g of GAMES.concat(list)) byUid.set(g.uid, g);
+  GAMES = Array.from(byUid.values()).sort((a, b) => a.date - b.date);
+}
+
+async function grab(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('http ' + r.status);
+  const t = await r.text();
+  if (!/BEGIN:VCALENDAR/.test(t)) throw new Error('not ics');
+  return parseIcs(t).map(toGame);
+}
+
+function saveLocal() {
+  try {
+    const slim = GAMES.filter(g => g.date >= Date.now() - 86400000).slice(0, 120)
+      .map(g => ({ u: g.uid, d: g.date.toISOString(), a: g.allDay, s: g.sport, e: g.emoji,
+                   o: g.opponent, t: g.title, h: g.home, w: g.where, v: g.venue, c: g.city }));
+    localStorage.setItem(LS_KEY, JSON.stringify({ at: fetchedAt, g: slim }));
+  } catch (e) { /* private mode / full quota — no big deal */ }
+}
+function loadLocal() {
+  try {
+    const j = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (!j || !j.g) return;
+    GAMES = j.g.map(x => {
+      const at = new Date(x.d), p = etParts(at);
+      return { uid: x.u, date: at, allDay: x.a, sport: x.s, emoji: x.e, opponent: x.o, title: x.t,
+               home: x.h, where: x.w, venue: x.v, city: x.c, played: false, url: '',
+               dayKey: p.y + '-' + String(p.m).padStart(2, '0') + '-' + String(p.d).padStart(2, '0'),
+               minutes: x.a ? null : etMinutes(at) };
+    }).sort((a, b) => a.date - b.date);
+    fetchedAt = 0;   /* cached copy is display-only; still refetch */
+  } catch (e) { /* nothing cached */ }
+}
+
+/* pass 1: the in-season feed. pass 2 (deep) fills in the off-season sports. */
+async function refresh(force) {
+  if (inFlight) return inFlight;
+  if (!force && fetchedAt && Date.now() - fetchedAt < TTL_MS) return GAMES;
+  inFlight = (async () => {
+    try {
+      mergeGames(await grab(ICS_BASE));
+      fetchedAt = Date.now();
+      saveLocal();
+      onUpdate();
+    } catch (e) { /* offline / gopack hiccup — we just show whatever we already have */ }
+    finally { inFlight = null; }
+    return GAMES;
+  })();
+  return inFlight;
+}
+
+async function refreshDeep() {
+  if (deepDone) return GAMES;
+  deepDone = true;
+  const results = await Promise.all(DEEP_SPORT_IDS.map(id =>
+    grab(ICS_BASE + '?sport_id=' + id).catch(() => [])));
+  let added = 0;
+  for (const list of results) { if (list.length) { mergeGames(list); added += list.length; } }
+  if (added) { saveLocal(); onUpdate(); }
+  return GAMES;
+}
+
+/* the app re-renders through this; NOTES.md shows what to hook up */
+let onUpdate = function () {};
+function setOnUpdate(fn) { if (typeof fn === 'function') onUpdate = fn; }
+
+/* ==========================================================================
+   6. PUBLIC QUERIES
+   ========================================================================== */
+function futureGames(opts) {
+  opts = opts || {};
+  const cut = Date.now() - (opts.graceMs != null ? opts.graceMs : 4 * 60 * 60 * 1000); /* a game stays "on" for ~4h */
+  let list = GAMES.filter(g => g.date.getTime() >= cut && !g.played);
+  if (opts.homeOnly) list = list.filter(g => g.home);
+  if (opts.sport) list = list.filter(g => new RegExp(opts.sport, 'i').test(g.sport));
+  return list;
+}
+
+/* next n games, chronological, home + away both labeled.
+   upcomingGames(n, {homeOnly:true}) → just the ones she can walk to.
+   upcomingGames(n, {sport:'basketball'}) → filter by sport. */
+function upcomingGames(n, opts) {
+  opts = opts || {};
+  return futureGames(opts).slice(0, n || 5).map(publicShape);
+}
+
+function gamesToday() {
+  const p = etParts(new Date());
+  const key = p.y + '-' + String(p.m).padStart(2, '0') + '-' + String(p.d).padStart(2, '0');
+  return GAMES.filter(g => g.dayKey === key && !g.played).map(publicShape);
+}
+
+function publicShape(g) {
+  return {
+    date: g.date, dayKey: g.dayKey, allDay: g.allDay, minutes: g.minutes,
+    sport: g.sport, emoji: g.emoji, opponent: g.opponent, title: g.title,
+    home: g.home, homeAway: g.home ? 'home' : 'away',
+    venue: g.venue, city: g.city, where: g.where, url: g.url,
+    timeText: timeText(g), whenText: whenText(g)
+  };
+}
+
+/* ==========================================================================
+   7. RENDER — matches the app's .bigDate card markup exactly
+   ========================================================================== */
+function esc(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, ''); }
+
+function timeText(g) {
+  if (g.allDay || g.minutes == null) return '';
+  return (typeof global.fmt12 === 'function')
+    ? global.fmt12(g.minutes)
+    : (((g.minutes / 60 | 0) % 12 || 12) + ':' + String(g.minutes % 60).padStart(2, '0') + (g.minutes >= 720 ? 'pm' : 'am'));
+}
+const ET_WD = new Intl.DateTimeFormat('en-US', { timeZone: ZONE, weekday: 'long' });
+function whenText(g) {
+  const d = daysFromToday(g.date);
+  if (d < 0) return 'NOW';
+  if (d === 0) return 'TODAY';
+  if (d === 1) return 'tmrw';
+  if (d < 7) return ET_WD.format(g.date).slice(0, 3);   /* "Sat" — same 3-letter cut the app uses */
+  return 'in ' + d + 'd';
+}
+
+/* Football is already on the card via ESPN (packHtml) with a live score —
+   don't print the same game twice. skipFootballOn = that game's ET dayKey. */
+let skipFootballOn = null;
+function setFootballHandled(dateLike) {
+  if (!dateLike) { skipFootballOn = null; return; }
+  const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+  if (isNaN(d)) { skipFootballOn = null; return; }
+  const p = etParts(d);
+  skipFootballOn = p.y + '-' + String(p.m).padStart(2, '0') + '-' + String(p.d).padStart(2, '0');
+}
+
+function sportsHtml(n) {
+  n = n || 3;
+  const home = futureGames({ homeOnly: true });
+  const away = futureGames({}).filter(g => !g.home);
+  let list = home.concat(away).sort((a, b) => a.date - b.date);
+  list = list.filter(g => !(g.sport === 'Football' && skipFootballOn && g.dayKey === skipFootballOn));
+  /* home games earn their slot first; away only fills leftover room */
+  const picked = list.filter(g => g.home).slice(0, n);
+  if (picked.length < n) for (const g of list) { if (!g.home && picked.length < n) picked.push(g); }
+  picked.sort((a, b) => a.date - b.date);
+
+  return picked.map(g => {
+    const t = timeText(g);
+    const sub = (g.home ? 'home' : 'away')
+      + (g.home && g.venue ? ' · ' + esc(g.venue) : (!g.home && g.city ? ' · ' + esc(g.city) : ''))
+      + (t ? ' · ' + t : '');
+    const what = g.emoji + ' ' + esc(g.sport) + ' ' + (g.home ? 'vs' : 'at') + ' ' + esc(g.opponent).slice(0, 34)
+      + (g.home ? '' : '<span class="awayTag">AWAY</span>');
+    return '<div class="bigDate"><div><div class="what">' + what + '</div>'
+      + '<div class="sub2">' + sub + '</div></div>'
+      + '<div class="when">' + esc(whenText(g)) + '</div></div>';
+  }).join('');
+}
+
+/* ==========================================================================
+   8. INIT
+   ========================================================================== */
+let started = false;
+function initSports(opts) {
+  opts = opts || {};
+  if (started) return;
+  started = true;
+  if (opts.onUpdate) setOnUpdate(opts.onUpdate);
+  loadLocal();
+  refresh(true);
+  /* the off-season sports can wait — first paint matters more */
+  if (opts.deep !== false) setTimeout(function () { refreshDeep().catch(function () {}); }, 6000);
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && Date.now() - fetchedAt > TTL_MS) refresh(false);
+    });
+  }
+}
+
+/* ---------- export ---------- */
+const API = {
+  initSports: initSports,
+  upcomingGames: upcomingGames,
+  gamesToday: gamesToday,
+  sportsHtml: sportsHtml,
+  setFootballHandled: setFootballHandled,
+  setSportsOnUpdate: setOnUpdate,
+  refreshSports: refresh,
+  refreshSportsDeep: refreshDeep,
+  /* exposed for test.js */
+  _parseIcs: parseIcs, _unfold: unfold, _toGame: toGame, _games: function () { return GAMES; }
+};
+for (const k in API) global[k] = API[k];
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
 fetchPack();
 setInterval(fetchPack, 5*60*1000);
+initSports({ onUpdate: renderDatesCard });
 
 /* ---------- gameday 🏈 ---------- */
 function gameToday(){
@@ -1593,6 +2422,335 @@ $('nextBusBtn').onclick=showNextBus;
 /* buses are ON by default — the 🚌 button turns them off, and that choice sticks */
 if(localStorage.getItem('busOff')!=='1'){ silentBusStart=true; toggleBus(true); }
 
+/* ================= 🛴 SPIN SCOOTERS ================= */
+/* ============================================================================
+   🛴 SPIN SCOOTERS + E-BIKES  (live GBFS v2.3, Raleigh)
+   Drop this block in right after the Wolfline bus section. Entry point at the
+   very bottom: initScooters().
+   Uses only app globals: $, toast, haversine, fmtDist, myPos, startLocate,
+   setDestination, showScreen, map, L.
+   ========================================================================== */
+
+const SPIN_BASE   = 'https://gbfs.spin.pm/api/gbfs/v2_3/raleigh';
+const SPIN_LS     = 'scootOn';                 /* NEW key — busOff is the bus's */
+const SPIN_CAP    = 60;                        /* never draw more than this */
+const SPIN_TTL    = 60000;                     /* feed ttl is 60s */
+const SPIN_NEAR_M = 1500;                      /* also show stuff within 1.5km of her */
+const SPIN_BBOX   = { s:35.76, n:35.80, w:-78.70, e:-78.65 };   /* campus-ish */
+const SPIN_HOME   = [35.78532, -78.67269];     /* Carroll Hall */
+const SPIN_WIGGLE = 1.4;                       /* streets aren't straight lines */
+
+let scootLayer=null, scootTimer=null, scootWait=null, scootBusy=false, scootSilent=false;
+let scootMarkers={}, scootList=[], scootTypes=null, scootZones=null, scootZonesAt=0;
+let scootFails=0, scootBound=false;
+
+/* ---------- tiny helpers ---------- */
+/* everything below comes off a third-party feed — never trust it in innerHTML */
+const scootEsc = s => String(s==null?'':s).replace(/[<>&"']/g, c =>
+  ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+const scootPct   = b => Math.max(0, Math.min(100, Math.round((+b.current_fuel_percent||0)*100)));
+const scootMiles = b => (Math.max(0,+b.current_range_meters||0)/1609.34);
+const scootTier  = p => p>60 ? 'hi' : p>=30 ? 'mid' : 'lo';
+function scootAgo(ts){
+  const s = Math.max(0, Math.round(Date.now()/1000 - (+ts||0)));
+  if(s<90) return 'just now';
+  return `${Math.round(s/60)} min ago`;
+}
+function scootAnchor(){
+  if(myPos) return myPos;
+  try{ const c=map.getCenter(); return [c.lat,c.lng]; }catch(e){ return SPIN_HOME; }
+}
+async function scootFetch(path, ms=9000){
+  const ac = new AbortController();
+  const t = setTimeout(()=>ac.abort(), ms);
+  try{
+    const r = await fetch(`${SPIN_BASE}/${path}`, { signal:ac.signal, cache:'no-store' });
+    if(!r.ok) throw new Error('http '+r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+/* ---------- feed ---------- */
+async function scootLoadTypes(){
+  if(scootTypes) return scootTypes;
+  try{
+    const j = await scootFetch('vehicle_types');
+    const m = {};
+    (j.data.vehicle_types||[]).forEach(t => m[t.vehicle_type_id] = t.form_factor);
+    scootTypes = m;
+  }catch(e){ scootTypes = {}; }      /* no types = everything is just a scooter 🛴 */
+  return scootTypes;
+}
+/* returns the nearest SPIN_CAP ridable vehicles, already scored */
+async function scootLoad(){
+  const [j] = await Promise.all([ scootFetch('free_bike_status'), scootLoadTypes() ]);
+  const anchor = scootAnchor();
+  const raw = (j && j.data && j.data.bikes) || [];
+  const out = [];
+  for(const b of raw){
+    const lat=+b.lat, lng=+b.lon;
+    if(!isFinite(lat) || !isFinite(lng)) continue;
+    if(b.is_disabled || b.is_reserved) continue;          /* she can't ride those */
+    const onCampus = lat>=SPIN_BBOX.s && lat<=SPIN_BBOX.n && lng>=SPIN_BBOX.w && lng<=SPIN_BBOX.e;
+    const d = haversine(anchor,[lat,lng]);
+    if(!onCampus && !(myPos && d<=SPIN_NEAR_M)) continue;
+    out.push({
+      id: String(b.bike_id||`${lat},${lng}`),
+      lat, lng, d,
+      pct: scootPct(b),
+      range: Math.max(0,+b.current_range_meters||0),
+      kind: (scootTypes[b.vehicle_type_id]==='bicycle') ? 'bike' : 'scooter',
+      ts: +b.last_reported||0
+    });
+  }
+  out.sort((a,b)=>a.d-b.d);
+  return out.slice(0, SPIN_CAP);      /* ~450 citywide -> 60 drawn, phone stays alive */
+}
+
+/* ---------- markers ---------- */
+function scootIcon(v){
+  const tier = scootTier(v.pct);
+  const glyph = v.kind==='bike' ? '🚲' : '🛴';
+  return L.divIcon({
+    className:'',
+    html:`<div class="scoot-pin ${tier}"><span class="scoot-gl">${glyph}</span>`+
+         `<i class="scoot-bar"><b style="width:${v.pct}%"></b></i></div>`,
+    iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-14]
+  });
+}
+function scootPopup(v){
+  const mi = scootMiles(v).toFixed(1);
+  const walk = myPos
+    ? `🚶 ${Math.max(1,Math.ceil(haversine(myPos,[v.lat,v.lng])*1.25/80))} min · ${fmtDist(haversine(myPos,[v.lat,v.lng]))} from u`
+    : 'tap 📍 so i can tell u how far it is';
+  return `<b>${v.kind==='bike'?'🚲 Spin e-bike':'🛴 Spin scooter'}</b>`+
+    `<div class="scoot-pop"><span class="scoot-dot ${scootTier(v.pct)}"></span>${v.pct}% battery · ${scootEsc(mi)} mi of range</div>`+
+    `<div class="scoot-pop">${walk}</div>`+
+    `<button class="scoot-go" type="button">take me to it 🛴</button>`+
+    `<div class="scoot-ago">updated ${scootAgo(v.ts)}</div>`;
+}
+function scootDraw(list){
+  if(!scootLayer) return;
+  const seen = {};
+  list.forEach(v=>{
+    seen[v.id]=1;
+    let m = scootMarkers[v.id];
+    if(m){                                  /* move it — keeps an open popup alive */
+      m.setLatLng([v.lat,v.lng]);
+      m.setIcon(scootIcon(v));
+      m._v = v;
+      m.setPopupContent(scootPopup(v));
+    } else {
+      m = L.marker([v.lat,v.lng],{ icon:scootIcon(v), zIndexOffset:400 });
+      m._v = v;
+      m.bindPopup(scootPopup(v));
+      m.on('popupopen', e=>{
+        const btn = e.popup.getElement() && e.popup.getElement().querySelector('.scoot-go');
+        if(btn) btn.onclick = ()=>{ map.closePopup(); scootRideTo(m._v); };
+      });
+      m.addTo(scootLayer);
+      scootMarkers[v.id]=m;
+    }
+  });
+  Object.keys(scootMarkers).forEach(k=>{     /* someone rode off on it */
+    if(!seen[k]){ scootLayer.removeLayer(scootMarkers[k]); delete scootMarkers[k]; }
+  });
+}
+async function scootRefresh(){
+  if(!scootLayer) return;                    /* toggled off mid-flight */
+  try{
+    const list = await scootLoad();
+    if(!scootLayer) return;
+    scootList = list;
+    scootFails = 0;
+    scootDraw(list);
+  }catch(e){
+    scootFails++;
+    /* fail silently offline — only speak up once, and only if she turned it on */
+    if(scootFails===3) toast("can't reach spin rn 🛴 the pins might be stale", 3500);
+  }
+}
+
+/* ---------- routing her to one ---------- */
+function scootRideTo(v){
+  if(!v) return;
+  setDestination({
+    name: v.kind==='bike' ? 'Spin e-bike 🚲' : 'Spin scooter 🛴',
+    cat:'scooter', emoji: v.kind==='bike'?'🚲':'🛴',
+    sub:`${v.pct}% battery`, lat:v.lat, lng:v.lng, _scoot:true
+  });
+  map.setView([v.lat,v.lng], 18);
+}
+
+/* ---------- geofencing (no-park zones) ---------- */
+function scootInRing(pt, ring){
+  let inside=false;
+  for(let i=0, j=ring.length-1; i<ring.length; j=i++){
+    const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1];
+    if((yi>pt[1])!==(yj>pt[1]) && pt[0] < (xj-xi)*(pt[1]-yi)/(yj-yi)+xi) inside=!inside;
+  }
+  return inside;
+}
+function scootInFeature(lat,lng,f){
+  const g=f&&f.geometry; if(!g||!g.coordinates) return false;
+  const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
+  for(const poly of polys){
+    if(!poly||!poly.length||!Array.isArray(poly[0])) continue;
+    if(scootInRing([lng,lat], poly[0])){
+      let hole=false;
+      for(let h=1;h<poly.length;h++) if(scootInRing([lng,lat],poly[h])) hole=true;
+      if(!hole) return true;
+    }
+  }
+  return false;
+}
+async function scootNoParkZones(){
+  if(scootZones && Date.now()-scootZonesAt < 6*3600e3) return scootZones;
+  try{
+    const j = await scootFetch('geofencing_zones', 9000);
+    const feats = (j.data.geofencing_zones && j.data.geofencing_zones.features) || [];
+    scootZones = feats.filter(f => (f.properties && f.properties.rules || [])
+      .some(r => r.ride_allowed === false));
+    scootZonesAt = Date.now();
+  }catch(e){ scootZones = scootZones || []; }   /* zone warn is a bonus, never blocking */
+  return scootZones;
+}
+async function scootParkWarn(v){
+  const zones = await scootNoParkZones();
+  if(zones.some(f => scootInFeature(v.lat, v.lng, f)))
+    toast("heads up — u can't END the ride right there, park it just outside 💕", 5000);
+}
+
+/* ---------- 🛴 nearest scooter action ---------- */
+async function scootNearest(){
+  showScreen('map');
+  if(!scootLayer){ scootSilent=true; await scootToggle(false); }   /* don't overwrite her saved choice */
+
+  if(!myPos){                                        /* no fix yet — wait for one, briefly */
+    startLocate();
+    toast('hold on, finding u first… 🛰️');
+    if(scootWait) return;
+    let tries=0;
+    scootWait = setInterval(()=>{
+      if(myPos){ clearInterval(scootWait); scootWait=null; scootNearest(); }
+      else if(++tries>20){ clearInterval(scootWait); scootWait=null; toast("can't find u rn baby girl 😭 tap 📍 and try again", 4000); }
+    }, 1000);
+    return;
+  }
+  if(scootWait){ clearInterval(scootWait); scootWait=null; }
+
+  if(!scootList.length){
+    try{
+      scootList = await scootLoad();
+      if(scootLayer) scootDraw(scootList);
+    }catch(e){ toast("spin's not answering rn 🛴 try again in a sec", 3500); return; }
+  }
+  if(!scootList.length){ toast('no scooters chillin nearby rn 😭 walkin it is', 4000); return; }
+
+  /* closest one she can actually ride home on: range covers the trip to Carroll
+     (with a street-wiggle factor) and enough juice left that it won't die on her.
+     If nothing clears the comfy 25% bar, take one that at least has the range. */
+  const canMakeIt = v => v.range > haversine([v.lat,v.lng], SPIN_HOME) * SPIN_WIGGLE;
+  const pick = scootList.find(v => v.pct >= 25 && canMakeIt(v))
+            || scootList.find(v => v.pct > 10 && canMakeIt(v));
+  if(!pick){
+    const any = scootList[0];
+    scootRideTo(any);
+    toast(`only dying ones nearby 🪫 closest is ${fmtDist(any.d)} away at ${any.pct}%`, 4500);
+    return;
+  }
+  scootRideTo(pick);
+  toast(`🛴 got u — ${fmtDist(pick.d)} away, ${pick.pct}% battery baby girl 💕`, 4500);
+  scootParkWarn(pick);                                /* fire and forget */
+}
+
+/* ---------- toggle ---------- */
+async function scootToggle(remember=true){
+  if(scootBusy) return;
+  scootBusy = true;
+  try{ await scootToggleInner(remember); } finally { scootBusy = false; }
+}
+async function scootToggleInner(remember){
+  const btn = $('scootBtn');
+  if(scootLayer){                                     /* ---- OFF ---- */
+    map.removeLayer(scootLayer);
+    scootLayer = null;
+    scootMarkers = {};
+    scootList = [];
+    if(scootTimer){ clearInterval(scootTimer); scootTimer=null; }   /* no leaked timers */
+    if(scootWait){ clearInterval(scootWait); scootWait=null; }
+    if(btn) btn.classList.remove('on');
+    if(remember) localStorage.setItem(SPIN_LS,'0');
+    return;
+  }
+  /* ---- ON ---- */
+  scootLayer = L.layerGroup().addTo(map);
+  scootFails = 0;
+  if(btn) btn.classList.add('on');
+  if(remember) localStorage.setItem(SPIN_LS,'1');
+  let down = false;
+  try{
+    scootList = await scootLoad();
+  }catch(e){
+    down = true;
+    scootList = [];
+  }
+  if(!scootLayer) return;                             /* toggled off while loading */
+  scootDraw(scootList);
+  if(scootTimer) clearInterval(scootTimer);
+  scootTimer = setInterval(scootRefresh, SPIN_TTL);   /* only runs while the layer is on */
+  if(!scootSilent){                                   /* exactly one toast, ever */
+    if(down) toast("spin's not answering rn 🛴 try again in a sec", 3500);
+    else if(scootList.length) toast(`${scootList.length} spins near u 🛴`, 2600);
+    else toast('no scooters chillin nearby rn 😭', 3000);
+  }
+  scootSilent = false;
+}
+
+/* ---------- entry point ---------- */
+function initScooters(){
+  if(scootBound) return;
+  scootBound = true;
+
+  const btn = $('scootBtn');
+  if(btn){
+    let held=false, ht=null;
+    btn.onclick = ()=>{ if(held){ held=false; return; } scootToggle(true); };
+    /* press & hold the 🛴 button = jump straight to the nearest one */
+    const down = ()=>{ ht=setTimeout(()=>{ held=true; scootNearest(); }, 550); };
+    const up   = ()=>{ if(ht){ clearTimeout(ht); ht=null; } };
+    btn.addEventListener('touchstart', down, {passive:true});
+    btn.addEventListener('touchend', up);
+    btn.addEventListener('touchmove', up, {passive:true});
+    btn.addEventListener('mousedown', down);
+    btn.addEventListener('mouseup', up);
+    btn.addEventListener('mouseleave', up);
+  }
+  const quick = $('scootBtn2');
+  if(quick) quick.onclick = ()=>scootNearest();
+
+  /* iOS freezes timers when the app is backgrounded and can fire a stale burst on
+     return — drop the timer while hidden, restart (with a fresh pull) when she's back */
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){
+      if(scootTimer){ clearInterval(scootTimer); scootTimer=null; }
+    } else if(scootLayer && !scootTimer){
+      scootRefresh();
+      scootTimer = setInterval(scootRefresh, SPIN_TTL);
+    }
+  });
+  window.addEventListener('pagehide', ()=>{
+    if(scootTimer){ clearInterval(scootTimer); scootTimer=null; }
+    if(scootWait){ clearInterval(scootWait); scootWait=null; }
+  });
+
+  /* scooters are OFF by default — this one costs battery + data */
+  if(localStorage.getItem(SPIN_LS)==='1'){ scootSilent=true; scootToggle(false); }
+}
+initScooters();
+initScooters();
+
+
 /* ---------- classes screen ---------- */
 let today = new Date().getDay();
 let shownDay = (today>=1 && today<=5) ? today : 1;
@@ -1677,6 +2835,279 @@ function renderClasses(day){
   });
 }
 $('homeBtn').onclick=()=>{ const p=findPlace('Carroll Hall'); if(p){ showScreen('map'); setDestination(p); } };
+
+/* ================= GROUP FITNESS @ CARMICHAEL ================= */
+/* ==========================================================================
+   GROUP FITNESS @ CARMICHAEL — live class schedule
+   Feed: Innosoft Fusion -> Wellness & Rec (text/calendar, ~30 day window,
+   ~420 events). CORS reflects our origin, so we can fetch it straight from
+   the page. Everything below is vanilla + dependency free.
+
+   Public API:
+     initFitness()   -> wire up the UI (call once, after DOM exists)
+     classesToday()  -> today's classes that haven't finished yet
+     nextClass()     -> the very next class starting (today or later)
+     fitnessHtml()   -> HTML string for the list
+   ========================================================================== */
+
+const GF_FEED = 'https://wellrec.dasa.ncsu.edu/wp-json/fusion/v1/events/21b19aae-56a8-4b17-bc78-f5208d360943';
+const GF_TZ   = 'America/New_York';
+const GF_TTL  = 60 * 60 * 1000;          /* 60 min in-memory cache */
+const GF_SHOW = 3;                        /* rows before "see all" */
+
+var GF_CLASSES = [];                      /* var: no TDZ if something reads it early */
+let gfAt = 0, gfFetching = null, gfDown = false, gfExpanded = false;
+
+/* ---------- tiny ICS parser (RFC5545 enough for this feed) ---------- */
+/* Lines can be FOLDED: a CRLF followed by one space/tab continues the previous
+   line. Unfold FIRST or long SUMMARYs get chopped in half. */
+function icsUnfold(text){
+  const out = [];
+  for (const raw of String(text).split(/\r\n|\n|\r/)) {
+    if (out.length && /^[ \t]/.test(raw)) out[out.length-1] += raw.slice(1);
+    else out.push(raw);
+  }
+  return out;
+}
+function icsUnescape(v){
+  return v.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1').trim();
+}
+function icsParse(text){
+  const events = []; let cur = null, inAlarm = false;
+  for (const line of icsUnfold(text)) {
+    if (line === 'BEGIN:VEVENT') { cur = {}; inAlarm = false; continue; }
+    if (line === 'END:VEVENT')   { if (cur && cur.SUMMARY) events.push(cur); cur = null; continue; }
+    if (line === 'BEGIN:VALARM') { inAlarm = true; continue; }   /* VALARM has its own
+                                     DESCRIPTION/TRIGGER — don't let it clobber the event */
+    if (line === 'END:VALARM')   { inAlarm = false; continue; }
+    if (!cur || inAlarm) continue;
+    const i = line.indexOf(':'); if (i < 0) continue;
+    const bits = line.slice(0, i).split(';');
+    const name = bits[0].toUpperCase(); if (!name) continue;
+    const params = {};
+    for (const b of bits.slice(1)) {
+      const e = b.indexOf('=');
+      if (e > 0) params[b.slice(0, e).toUpperCase()] = b.slice(e+1).replace(/^"|"$/g, '');
+    }
+    if (!(name in cur)) cur[name] = { v: icsUnescape(line.slice(i+1)), p: params };
+  }
+  return events;
+}
+/* how far ahead of UTC the zone is at that instant, in ms */
+function tzOffsetMs(date, tz){
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour12:false,
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit' }).formatToParts(date);
+    const g = {}; for (const x of p) g[x.type] = x.value;
+    const asUTC = Date.UTC(+g.year, +g.month-1, +g.day, (+g.hour)%24, +g.minute, +g.second);
+    return asUTC - date.getTime();
+  } catch(e){ return 0; }
+}
+/* wall-clock fields in `tz` -> real UTC instant (two passes settles DST edges) */
+function zonedToUtc(n, tz){
+  const naive = Date.UTC(n[0], n[1], n[2], n[3], n[4], n[5]);
+  let ts = naive;
+  for (let i = 0; i < 2; i++) ts = naive - tzOffsetMs(new Date(ts), tz);
+  return new Date(ts);
+}
+/* DTSTART:20260820T130000Z | DTSTART;TZID=America/New_York:20260820T090000 |
+   DTSTART;VALUE=DATE:20260820 */
+function icsDate(prop){
+  if (!prop) return null;
+  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(prop.v || '');
+  if (!m) return null;
+  const n = [+m[1], +m[2]-1, +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0)];
+  if (m[7] === 'Z') return new Date(Date.UTC(n[0], n[1], n[2], n[3], n[4], n[5]));
+  return zonedToUtc(n, (prop.p && prop.p.TZID) || GF_TZ);   /* floating = campus time */
+}
+
+/* ---------- campus-time helpers (she could open this from anywhere) ---------- */
+function nyParts(d){
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: GF_TZ, hour12:false,
+      year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
+      .formatToParts(d);
+    const g = {}; for (const x of p) g[x.type] = x.value;
+    return { key: g.year+'-'+g.month+'-'+g.day, min: ((+g.hour)%24)*60 + (+g.minute) };
+  } catch(e){
+    return { key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),
+             min: d.getHours()*60 + d.getMinutes() };
+  }
+}
+const gfDayKey = d => nyParts(d).key;
+
+/* ---------- names ---------- */
+const GF_WORDS = { BODYPUMP:'BodyPump', BODYSTEP:'BodyStep', BODYCOMBAT:'BodyCombat',
+  BODYBALANCE:'BodyBalance', GRIT:'GRIT', CORE:'Core', TRX:'TRX', BXR:'BXR', F45:'F45',
+  HIIT:'HIIT', HI:'Hi', LES:'Les', MILLS:'Mills', '&':'&', HOP:'Hop', WERK:'Werk', TWERK:'Twerk' };
+const GF_SMALL = /^(the|and|of|a|an|to|in|on)$/;
+function gfTitle(s){
+  return s.toLowerCase().split(/\s+/).filter(Boolean).map((w, i) => {
+    const up = w.toUpperCase();
+    if (GF_WORDS[up]) return GF_WORDS[up];
+    if (i > 0 && GF_SMALL.test(w)) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+/* "GF | YOGA - POWER" -> "Power Yoga"; "GF | STUDIO VIRTUAL | LES MILLS CORE"
+   -> "Les Mills Core" (+ virtual flag) */
+function gfClean(summary){
+  let s = String(summary).trim();
+  let virtual = false;
+  s = s.replace(/^GF\s*\|\s*/i, '');
+  if (/^STUDIO VIRTUAL\s*\|\s*/i.test(s)) { virtual = true; s = s.replace(/^STUDIO VIRTUAL\s*\|\s*/i, ''); }
+  s = s.replace(/\s*\|\s*/g, ' — ').trim();
+  const m = /^([A-Z0-9]+)\s*-\s*(.+)$/i.exec(s);
+  if (m) {
+    const head = m[1].toUpperCase(), tail = m[2].trim();
+    if (head === 'YOGA' || head === 'PILATES') s = tail + ' ' + head;          /* Power Yoga, Mat Pilates */
+    else if (head === 'DANCE') s = /danc|zumba/i.test(tail) ? tail : tail + ' Dance';
+    else s = head + ' ' + tail;
+  }
+  return { name: gfTitle(s), virtual };
+}
+function gfEmoji(name){
+  const n = name.toLowerCase();
+  if (/yoga|pilates|barre|mindbody|flow|stretch|yin/.test(n))          return '🧘';
+  if (/cycle|spin/.test(n))                                            return '🚴';
+  if (/kickbox|boxing|bxr|combat/.test(n))                             return '🥊';
+  if (/dance|zumba|hip hop|twerk|line danc/.test(n))                   return '💃';
+  if (/bodypump|strength|trx|f45|grit|pump|lift|sculpt|core|step/.test(n)) return '🏋️';
+  return '💪';
+}
+function gfStudio(loc){
+  return String(loc || '').replace(/\s+/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '') || 'Carmichael Gym';
+}
+
+/* ---------- fetch + cache ---------- */
+function gfBuild(text){
+  return icsParse(text).map(e => {
+    const start = icsDate(e.DTSTART), end = icsDate(e.DTEND);
+    if (!start) return null;
+    const c = gfClean(e.SUMMARY.v);
+    const sp = nyParts(start);
+    return { name:c.name, virtual:c.virtual, emoji:gfEmoji(c.name),
+             studio:gfStudio(e.LOCATION && e.LOCATION.v),
+             start, end: end || new Date(start.getTime() + 45*60000),
+             day: sp.key, min: sp.min };
+  }).filter(Boolean)
+    .filter(c => !/employee wellness/i.test(c.name))     /* staff-only block, not for her */
+    .sort((a,b) => a.start - b.start);
+}
+function fetchFitness(force){
+  if (!force && GF_CLASSES.length && Date.now() - gfAt < GF_TTL) return Promise.resolve(GF_CLASSES);
+  if (gfFetching) return gfFetching;
+  gfFetching = fetch(GF_FEED, { cache:'no-store' })
+    .then(r => { if (!r.ok) throw new Error('feed ' + r.status); return r.text(); })
+    .then(t => {
+      const list = gfBuild(t);
+      if (list.length) { GF_CLASSES = list; gfAt = Date.now(); gfDown = false; }
+      return GF_CLASSES;
+    })
+    .catch(() => { gfDown = !GF_CLASSES.length; return GF_CLASSES; })  /* offline: keep what we had */
+    .then(v => { gfFetching = null; return v; });
+  return gfFetching;
+}
+
+/* ---------- public queries ---------- */
+function classesToday(){
+  const now = new Date(), key = gfDayKey(now);
+  return GF_CLASSES.filter(c => c.day === key && c.end > now).sort((a,b) => a.start - b.start);
+}
+function nextClass(){
+  const now = new Date();
+  return GF_CLASSES.find(c => c.start > now) || null;
+}
+function classesTomorrow(){
+  const t = new Date(Date.now() + 86400000), key = gfDayKey(t);
+  return GF_CLASSES.filter(c => c.day === key).sort((a,b) => a.start - b.start);
+}
+
+/* ---------- render ---------- */
+const gfEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+function fitnessHtml(){
+  const today = classesToday();
+  if (gfDown && !GF_CLASSES.length)
+    return '<div class="gfNote">can\'t reach the rec center rn 😕 try again in a sec baby girl</div>';
+  if (!GF_CLASSES.length)
+    return '<div class="gfNote">loading the gym schedule… 💪</div>';
+
+  if (!today.length) {
+    const tmrw = classesTomorrow();
+    const rest = GF_CLASSES.filter(c => c.day === gfDayKey(new Date())).length;
+    const head = rest
+      ? 'gym classes are done for today baby girl 😴'
+      : 'no group fitness today baby girl 😌💕';
+    const nx = tmrw[0];
+    const tail = nx
+      ? `<div class="gfNote sub">tmrw: ${gfEsc(nx.emoji + ' ' + nx.name)} at ${fmt12(nx.min)}</div>`
+      : '';
+    return `<div class="gfNote">${head}</div>${tail}`;
+  }
+
+  const now = new Date();
+  const shown = gfExpanded ? today : today.slice(0, GF_SHOW);
+  const rows = shown.map((c, i) => {
+    const on = c.start <= now;
+    const badge = on ? '<span class="gfBadge now">NOW</span>'
+                     : (i === 0 ? '<span class="gfBadge">NEXT</span>' : '');
+    const sub = gfEsc(c.studio) + (c.virtual ? ' · virtual' : '');
+    return `<div class="cls gf${i === 0 ? ' next' : ''}" data-gf="${c.start.getTime()}">
+      <div class="time">${fmt12(c.min)}</div>
+      <div>
+        <div class="course">${gfEsc(c.emoji + ' ' + c.name)}${badge}</div>
+        <div class="where">${sub}</div>
+      </div>
+      <button class="go" type="button">Go</button>
+    </div>`;
+  }).join('');
+  const more = today.length > GF_SHOW
+    ? `<button id="gfMore" class="gfMore" type="button">${gfExpanded ? 'show less' : '+ ' + (today.length - GF_SHOW) + ' more today'}</button>`
+    : '';
+  return rows + more;
+}
+
+function gfGo(c){
+  const p = findPlace('Carmichael Gym');
+  if (!p) { toast('couldn\'t find Carmichael on the map 😕'); return; }
+  toast(`${c.emoji} ${c.name} at ${fmt12(c.min)} — routing u to Carmichael ❤️`, 3500);
+  showScreen('map');
+  setDestination({ ...p, name: `${c.name} — Carmichael Gym` });
+}
+
+function renderFitness(){
+  const el = $('gfList'); if (!el) return;
+  el.innerHTML = fitnessHtml();
+  el.querySelectorAll('.cls.gf').forEach(row => {
+    const ts = +row.dataset.gf;
+    const c  = GF_CLASSES.find(x => x.start.getTime() === ts);
+    if (!c) return;
+    const go = () => gfGo(c);
+    const btn = row.querySelector('.go');
+    if (btn) btn.onclick = e => { e.stopPropagation(); go(); };
+    row.onclick = go;
+  });
+  const more = $('gfMore');
+  if (more) more.onclick = () => { gfExpanded = !gfExpanded; renderFitness(); };
+}
+
+/* ---------- entry point ---------- */
+function initFitness(){
+  if (!$('gfList')) return;
+  renderFitness();                                     /* instant "loading…" */
+  fetchFitness().then(renderFitness).catch(() => {});
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    fetchFitness().then(renderFitness).catch(() => {}); /* TTL-gated: cheap no-op */
+  });
+  /* classes tick over during the day — re-render (no refetch) every 5 min */
+  setInterval(() => { if (currentScreen === 'classes') renderFitness(); }, 5*60*1000);
+}
+initFitness();
+
 
 /* ---------- pics & vids of us 💕 ---------- */
 const MEDIA = [
@@ -1801,6 +3232,365 @@ function closesAt(p){
   const r=ranges.find(([a,b])=>m>=a&&m<b);
   return r?fmt12(r[1]):'';
 }
+
+/* ================= LIVE DINING HOURS (dining.ncsu.edu) ================= */
+/* ============================================================
+   LIVE DINING HOURS — NC State dining API
+   Replaces the hardcoded `hrs:` objects on dining pins with the
+   real published hours, falling back to `hrs:` when offline.
+
+   Entry point:  initDiningHours()
+   Public API:   liveHours(placeName)   -> [[start,end],...] | [] | null
+                 diningMatchReport()    -> matching table (console)
+                 refreshDiningHours()   -> force refetch (returns Promise)
+
+   Everything lives in one IIFE so nothing at top level can read a
+   binding declared later (no TDZ hazards).
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var API_URL = 'https://dining.ncsu.edu/wp-json/dining-hours/all';
+  var TTL_MS  = 30 * 60 * 1000;          /* 30 min in-memory cache */
+  var LS_KEY  = 'bccDiningHours';        /* survives a reload while offline */
+
+  /* mutable module state — plain object, created before anything reads it */
+  var state = {
+    locations: null,   /* normalized title -> api entry */
+    list: null,        /* array of {title, tokens, entry} */
+    fetchedAt: 0,
+    inflight: null,
+    patched: false,
+    report: null
+  };
+
+  /* ---------- entity decoding (never innerHTML an API string) ---------- */
+  var NAMED = {
+    amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+    ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘',
+    ldquo: '“', rdquo: '”', eacute: 'é', hellip: '…'
+  };
+  function decodeEntities(s) {
+    if (typeof s !== 'string') return '';
+    return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, function (whole, body) {
+      if (body.charAt(0) === '#') {
+        var num = body.charAt(1) === 'x' || body.charAt(1) === 'X'
+          ? parseInt(body.slice(2), 16)
+          : parseInt(body.slice(1), 10);
+        if (!isFinite(num) || num < 0 || num > 0x10FFFF) return whole;
+        try { return String.fromCodePoint(num); } catch (e) { return whole; }
+      }
+      var hit = NAMED[body.toLowerCase()];
+      return hit === undefined ? whole : hit;
+    });
+  }
+
+  /* ---------- name normalization + matching ---------- */
+  /* words that carry no identity for our pins ("Fountain Dining Hall" == "Fountain") */
+  var STOP = { dining: 1, hall: 1, halls: 1, student: 1, union: 1, the: 1,
+               a: 1, an: 1, at: 1, of: 1, ncsu: 1, nc: 1, state: 1,
+               cafe: 1 };
+
+  function tokens(name) {
+    var s = decodeEntities(name || '').toLowerCase();
+    if (s.normalize) s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); /* cafe accents */
+    s = s.replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim();
+    var out = [], parts = s ? s.split(' ') : [];
+    for (var i = 0; i < parts.length; i++) if (parts[i] && !STOP[parts[i]]) out.push(parts[i]);
+    return out;
+  }
+  function norm(name) { return tokens(name).join(' '); }
+
+  /* Pins the fuzzy matcher can't resolve on its own.
+     key = normalized pin name, value = exact API title to bind to. */
+  var ALIASES = {
+    /* "Talley Student Union" normalizes to just "talley", which matches ~8 API
+       rows (Talley Market, Talley - Jason's Deli, ...). Our pin's own link
+       points at /location/talley-pavilions/, so bind it to the food court. */
+    'talley': 'Talley Pavilions'
+  };
+
+  function buildIndex(locations) {
+    var list = [], byNorm = {};
+    for (var id in locations) {
+      if (!Object.prototype.hasOwnProperty.call(locations, id)) continue;
+      var e = locations[id];
+      if (!e || typeof e !== 'object' || typeof e.title !== 'string') continue;
+      var rec = { id: id, title: decodeEntities(e.title), tokens: tokens(e.title), entry: e };
+      rec.norm = rec.tokens.join(' ');
+      list.push(rec);
+      if (!byNorm[rec.norm]) byNorm[rec.norm] = rec;
+    }
+    state.list = list;
+    state.locations = byNorm;
+  }
+
+  function subsetPick(needle, hayList) {
+    /* candidates whose tokens contain every needle token; fewest extras wins.
+       A tie at the best score is reported as ambiguous rather than guessed. */
+    var best = null, bestScore = Infinity, tie = [];
+    for (var i = 0; i < hayList.length; i++) {
+      var h = hayList[i], ok = true;
+      for (var j = 0; j < needle.length; j++) {
+        if (h.tokens.indexOf(needle[j]) === -1) { ok = false; break; }
+      }
+      if (!ok) continue;
+      var score = h.tokens.length - needle.length;
+      if (score < bestScore) { bestScore = score; best = h; tie = [h]; }
+      else if (score === bestScore) tie.push(h);
+    }
+    if (tie.length > 1) return { rec: null, ambiguous: tie };
+    return { rec: best, ambiguous: null };
+  }
+
+  function matchRecord(placeName) {
+    if (!state.list) return null;
+    var key = norm(placeName);
+    if (!key) return null;
+
+    var alias = ALIASES[key];
+    if (alias) {
+      var an = norm(alias), hit = state.locations[an];
+      if (hit) { hit.how = 'alias'; return hit; }
+    }
+    if (state.locations[key]) { state.locations[key].how = 'exact'; return state.locations[key]; }
+
+    var need = tokens(placeName);
+    var fwd = subsetPick(need, state.list);           /* pin tokens ⊆ api tokens */
+    if (fwd.rec) { fwd.rec.how = 'tokens'; return fwd.rec; }
+    if (fwd.ambiguous) { matchRecord._last = fwd.ambiguous; return null; }
+
+    /* reverse: api tokens ⊆ pin tokens (api title shorter than our pin name) */
+    for (var i = 0, best = null, bestScore = Infinity, tie = []; i < state.list.length; i++) {
+      var h = state.list[i], ok = h.tokens.length > 0;
+      for (var j = 0; ok && j < h.tokens.length; j++) if (need.indexOf(h.tokens[j]) === -1) ok = false;
+      if (!ok) continue;
+      var score = need.length - h.tokens.length;
+      if (score < bestScore) { bestScore = score; best = h; tie = [h]; }
+      else if (score === bestScore) tie.push(h);
+    }
+    if (tie.length === 1 && best) { best.how = 'tokens-reverse'; return best; }
+    if (tie.length > 1) matchRecord._last = tie;
+    return null;
+  }
+
+  /* ---------- time parsing ---------- */
+  /* Real data is 24h "H:MM" ("7:00", "13:30", "0:00"). We also accept
+     "7:00 AM", "7pm", "noon", "midnight" in case the CMS changes. */
+  function parseTime(v) {
+    if (typeof v !== 'string') return null;
+    var t = v.trim().toLowerCase().replace(/\./g, '');
+    if (!t) return null;
+    if (t === 'noon') return 720;
+    if (t === 'midnight') return 0;
+    var m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10), mm = m[2] ? parseInt(m[2], 10) : 0, ap = m[3];
+    if (!isFinite(h) || !isFinite(mm) || mm > 59) return null;
+    if (ap) {
+      if (h < 1 || h > 12) return null;
+      if (h === 12) h = 0;
+      if (ap === 'pm') h += 12;
+    } else if (h > 24) return null;
+    return (h * 60 + mm);
+  }
+
+  function localISO(d) {
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  /* Convert one day block to [[start,end],...] in minutes since midnight.
+     PAST-MIDNIGHT POLICY: a close time <= its open time (Talley Market and
+     Bragaw Market both publish open 7:00 / close 0:00) is CLAMPED to 1440,
+     i.e. "open through the end of today". We do NOT split the range into
+     tomorrow, because openNow() only ever looks at today's bucket, so a
+     split tail would be invisible anyway. Cost: at 12:10am the app says
+     closed, which matches how the rest of the app already behaves. */
+  function dayRanges(dayObj) {
+    if (!dayObj || typeof dayObj !== 'object') return null;
+    if (String(dayObj.closed) === '1') return [];          /* explicitly closed */
+    var s = dayObj.schedule;
+    if (!s || typeof s !== 'object') return null;          /* unknown -> fall back */
+    var keys = Object.keys(s).sort(function (a, b) {
+      var na = parseInt(String(a).replace(/\D+/g, ''), 10), nb = parseInt(String(b).replace(/\D+/g, ''), 10);
+      if (!isFinite(na)) na = 0; if (!isFinite(nb)) nb = 0;
+      return na - nb;
+    });
+    var out = [];
+    for (var i = 0; i < keys.length; i++) {
+      var blk = s[keys[i]];
+      if (!blk || typeof blk !== 'object') continue;
+      var o = parseTime(blk.open), c = parseTime(blk.close);
+      if (o === null || c === null) continue;
+      if (c <= o) c = 1440;                                 /* past midnight -> clamp */
+      if (c > 1440) c = 1440;
+      if (c > o) out.push([o, c]);
+    }
+    if (!out.length) return null;
+    out.sort(function (a, b) { return a[0] - b[0]; });
+    return out;
+  }
+
+  /* ---------- public: liveHours ---------- */
+  function liveHours(placeName) {
+    try {
+      var rec = matchRecord(placeName);
+      if (!rec) return null;
+      var hours = rec.entry && rec.entry.hours;
+      if (!hours) return null;
+      var todayISO = localISO(new Date());
+      var block = null;
+      if (hours.today && hours.today.date === todayISO) block = hours.today;
+      else if (hours.tomorrow && hours.tomorrow.date === todayISO) block = hours.tomorrow;
+      else if (hours.today && !hours.today.date) block = hours.today;
+      if (!block) return null;      /* cached payload rolled past midnight -> stale */
+      return dayRanges(block);
+    } catch (e) { return null; }
+  }
+
+  /* ---------- fetching / caching ---------- */
+  function ingest(payload) {
+    var locs = payload && payload.data && payload.data.locations;
+    if (!locs && payload && payload.locations) locs = payload.locations;   /* shape guard */
+    if (!locs || typeof locs !== 'object') return false;
+    buildIndex(locs);
+    state.fetchedAt = Date.now();
+    state.report = null;
+    return true;
+  }
+
+  function saveLocal(payload) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ at: Date.now(), payload: payload })); } catch (e) {}
+  }
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return false;
+      var wrap = JSON.parse(raw);
+      if (!wrap || !wrap.payload) return false;
+      if (!ingest(wrap.payload)) return false;
+      state.fetchedAt = 0;              /* cached-from-disk: still counts as stale */
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function fetchHours(force) {
+    if (!force && state.locations && (Date.now() - state.fetchedAt) < TTL_MS) {
+      return Promise.resolve(true);
+    }
+    if (state.inflight) return state.inflight;
+    if (typeof fetch !== 'function') return Promise.resolve(false);
+
+    state.inflight = fetch(API_URL, { cache: 'no-store', credentials: 'omit' })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (j) {
+        var ok = ingest(j);
+        if (ok) saveLocal(j);
+        if (ok && typeof window.onDiningHoursUpdate === 'function') {
+          try { window.onDiningHoursUpdate(); } catch (e) {}
+        }
+        return ok;
+      })
+      .catch(function () { return false; })   /* offline: silent, hardcoded hrs still work */
+      .then(function (v) { state.inflight = null; return v; });
+
+    return state.inflight;
+  }
+
+  /* ---------- the hook: live data wins, hardcoded hrs is the fallback ---------- */
+  /* Only cat:"dining" pins (the on-campus ones) get live hours.
+     cat:"food" is deliberately EXCLUDED: our "Chick-fil-A" pin is the
+     Hillsborough St store, but the API has "Atrium - Chick-fil-A" — the
+     campus one — and the matcher happily links them. Wrong building,
+     wrong hours. Same trap for any future franchise name. */
+  function liveRangesForPlace(p) {
+    if (!p || typeof p.name !== 'string') return null;
+    if (p.cat !== 'dining') return null;
+    if (p.noLiveHours) return null;                                    /* per-pin opt out */
+    return liveHours(p.name);
+  }
+
+  function patchOpenNow() {
+    if (state.patched) return;
+    var origOpen = window.openNow, origCloses = window.closesAt;
+    if (typeof origOpen !== 'function') return;   /* module pasted too early — no-op */
+
+    window.openNow = function (p) {
+      var r = liveRangesForPlace(p);
+      if (r) {                                    /* [] is truthy => explicitly closed */
+        if (!r.length) return false;
+        var now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+        for (var i = 0; i < r.length; i++) if (m >= r[i][0] && m < r[i][1]) return true;
+        return false;
+      }
+      return origOpen(p);
+    };
+
+    if (typeof origCloses === 'function') {
+      window.closesAt = function (p) {
+        var r = liveRangesForPlace(p);
+        if (r) {
+          if (!r.length) return '';
+          var now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+          for (var i = 0; i < r.length; i++) {
+            if (m >= r[i][0] && m < r[i][1]) {
+              return (typeof window.fmt12 === 'function') ? window.fmt12(r[i][1]) : '';
+            }
+          }
+          return '';
+        }
+        return origCloses(p);
+      };
+    }
+    state.patched = true;
+  }
+
+  /* ---------- match report (dev tool, console only) ---------- */
+  function diningMatchReport() {
+    var rows = [];
+    var places = (typeof window.allPlaces === 'function') ? window.allPlaces()
+               : (window.PLACES || []);
+    for (var i = 0; i < places.length; i++) {
+      var p = places[i];
+      if (!p || (p.cat !== 'dining' && p.cat !== 'food')) continue;
+      matchRecord._last = null;
+      var rec = matchRecord(p.name);
+      rows.push({
+        pin: p.name,
+        cat: p.cat,
+        applied: p.cat === 'dining' && !p.noLiveHours,   /* false => match ignored by the patch */
+        api: rec ? rec.title : null,
+        how: rec ? rec.how : (matchRecord._last ? 'AMBIGUOUS: ' +
+              matchRecord._last.map(function (x) { return x.title; }).join(' | ') : 'no match'),
+        todayRanges: rec ? liveHours(p.name) : null
+      });
+    }
+    state.report = rows;
+    if (window.console && console.table) console.table(rows);
+    return rows;
+  }
+
+  /* ---------- entry point ---------- */
+  function initDiningHours() {
+    try {
+      loadLocal();          /* instant hours from last session if today's date matches */
+      patchOpenNow();       /* patch first so offline behaviour is identical */
+      fetchHours(false);
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') fetchHours(false);
+      });
+    } catch (e) { /* never throw at top level */ }
+  }
+
+  window.initDiningHours    = initDiningHours;
+  window.liveHours          = liveHours;
+  window.refreshDiningHours = function () { return fetchHours(true); };
+  window.diningMatchReport  = diningMatchReport;
+  window.patchOpenNow       = patchOpenNow;
+})();
+
 function feedBella(){
   if(!myPos){ pendingHungry=true; startLocate(); toast('hold on, finding u first… 🛰️'); return; }
   pendingHungry=false;
@@ -2115,6 +3905,7 @@ if(localStorage.getItem('onboarded')){
   if(!needsCompassPerm) requestCompass();
 }
 refreshNextCard();
+initDiningHours();
 $('startBtn').onclick=()=>{
   localStorage.setItem('onboarded','1');
   $('welcome').classList.add('off');
