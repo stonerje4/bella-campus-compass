@@ -374,6 +374,35 @@
     box-shadow:var(--shadow-soft); color:var(--ink); font-size:14px; font-weight:800;
   }
   #wxChip.on { display:block; }
+  /* ---- live campus cams: small thumb on the map, tap to blow it up ---- */
+  #camMini {
+    display:none; position:absolute; top:calc(10px + env(safe-area-inset-top) + var(--alert-h,0px));
+    right:14px; z-index:1100; width:82px; height:46px; padding:0; overflow:hidden;
+    border-radius:12px; border:.5px solid var(--hairline); background:#111;
+    box-shadow:var(--shadow-soft); -webkit-touch-callout:none;
+  }
+  #camMini.on { display:block; }
+  #camMiniImg { width:100%; height:100%; object-fit:cover; display:block; }
+  #camMiniDot { position:absolute; top:3px; right:5px; font-size:9px; color:#ff3b3b;
+    text-shadow:0 0 5px rgba(255,59,59,.9); animation:camPulse 2s infinite; }
+  @keyframes camPulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+  #camOverlay {
+    display:none; position:absolute; inset:0; z-index:4600; background:rgba(0,0,0,.82);
+    align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  #camOverlay.on { display:flex; }
+  #camBox { width:100%; max-width:520px; }
+  #camPicker { display:flex; gap:6px; overflow-x:auto; padding-bottom:9px; scrollbar-width:none; }
+  #camPicker::-webkit-scrollbar { display:none; }
+  #camFrame { position:relative; border-radius:16px; overflow:hidden; background:#000;
+    box-shadow:0 14px 44px rgba(0,0,0,.6); min-height:120px; }
+  #camBig { width:100%; display:block; }
+  #camLive { position:absolute; top:9px; left:10px; background:rgba(10,10,12,.72);
+    color:#ff5252; font-size:10px; font-weight:900; letter-spacing:.6px;
+    padding:3px 8px; border-radius:20px; backdrop-filter:blur(6px); }
+  #camName { text-align:center; font-size:15px; font-weight:900; color:var(--ink); margin-top:12px; }
+  #camHint { text-align:center; font-size:12px; color:#6c6c74; margin-top:4px; }
   #nextCard {
     display:none; position:absolute; top:calc(10px + env(safe-area-inset-top) + var(--wx-h,0px) + var(--alert-h,0px));
     left:12px; right:12px; z-index:1100;
@@ -558,6 +587,15 @@
 <div id="wxAlert"></div>
 <button id="nightBtn">🏠 GET ME HOME<small>tap once baby girl, i got u ❤️</small></button>
 <button id="wxChip" title="tap for the full forecast"></button>
+<button id="camMini" title="live campus cameras"><img id="camMiniImg" alt=""><span id="camMiniDot">●</span></button>
+<div id="camOverlay">
+  <div id="camBox">
+    <div id="camPicker"></div>
+    <div id="camFrame"><img id="camBig" alt="live campus camera"><div id="camLive">● LIVE</div></div>
+    <div id="camName"></div>
+    <div id="camHint">tap outside to close</div>
+  </div>
+</div>
 <div id="nextCard">
   <div>
     <div id="ncTitle"></div>
@@ -3792,6 +3830,65 @@ $('endBtn').onclick=()=>{
   refreshNextCard(); refreshNightBtn();
 };
 $('wxChip').onclick=()=>showScreen('classes');
+
+/* ================= LIVE CAMPUS CAMS ================= */
+/* All NC State's own cameras or NCDOT public traffic cams — no broadcaster feeds.
+   YouTube-backed stills refresh ~5 min, WeatherSTEM ~1 min, NCDOT ~1 min.
+   The ?t= buster stops the BROWSER from showing a frozen cached frame. */
+const CAMS=[
+  { n:'the Belltower 🔔',     u:'https://i.ytimg.com/vi/D9nujG0PUTQ/maxresdefault_live.jpg' },
+  { n:'Centennial 🌅',        u:'https://images.weatherstem.com/skycamera/wake/ncstate/cumulus/snapshot.jpg' },
+  { n:'Carter-Finley 🏈',     u:'https://images.weatherstem.com/skycamera/wake/carterfinley/cumulus/snapshot.jpg' },
+  { n:'construction 🏗️',      u:'https://i.ytimg.com/vi/JjleB3PFJXA/maxresdefault_live.jpg' },
+  { n:'downtown skyline 🌆',  u:'https://i.ytimg.com/vi/bEZByG4nP-A/maxresdefault_live.jpg' },
+  { n:'I-440 traffic 🚗',     u:'https://www.drivenc.gov/map/Cctv/5621' },
+];
+let camIdx=0, camTimer=null, camOK=false;
+function camSrc(i){ const c=CAMS[i]; return c.u+(c.u.indexOf('?')>=0?'&':'?')+'t='+Date.now(); }
+function paintMini(){
+  const im=$('camMiniImg'); if(!im) return;
+  im.onload=()=>{ camOK=true; refreshCamMini(); };
+  im.onerror=()=>{ camOK=false; $('camMini').classList.remove('on'); };
+  im.src=camSrc(0);                        /* the thumb is always the Belltower */
+}
+function paintBig(){
+  const im=$('camBig'); if(!im) return;
+  im.onerror=()=>{ $('camName').textContent=CAMS[camIdx].n+" — can't reach this one rn 😕"; };
+  im.src=camSrc(camIdx);
+  $('camName').textContent=CAMS[camIdx].n;
+  const w=$('camPicker');
+  if(w) w.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('on',i===camIdx));
+}
+function buildCamPicker(){
+  const w=$('camPicker'); if(!w||w.childElementCount) return;
+  CAMS.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.className='chip'+(i===camIdx?' on':''); b.textContent=c.n;
+    b.onclick=e=>{ e.stopPropagation(); camIdx=i; paintBig(); };
+    w.appendChild(b);
+  });
+}
+function openCams(){
+  buildCamPicker(); paintBig();
+  $('camOverlay').classList.add('on');
+  if(camTimer) clearInterval(camTimer);
+  camTimer=setInterval(paintBig, 60000);
+}
+function closeCams(){
+  $('camOverlay').classList.remove('on');
+  if(camTimer){ clearInterval(camTimer); camTimer=null; }
+}
+function refreshCamMini(){
+  const show = camOK && currentScreen==='map' && !dest;
+  $('camMini').classList.toggle('on', show);
+}
+$('camMini').onclick=openCams;
+$('camOverlay').onclick=e=>{ if(e.target===$('camOverlay')||e.target===$('camBox')) closeCams(); };
+$('camFrame').onclick=e=>e.stopPropagation();
+paintMini();
+setInterval(()=>{ if(camOK && currentScreen==='map' && !dest) $('camMiniImg').src=camSrc(0); }, 120000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshCamMini(); });
+
 
 async function fetchRoute(){
   if(!myPos || !dest) return;
