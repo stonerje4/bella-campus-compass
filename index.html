@@ -218,6 +218,27 @@
              background:var(--red-grad); color:#fff; font-size:9px; font-weight:900;
              letter-spacing:.5px; vertical-align:middle; }
   .gfBadge.now { background:#e67e22; }
+
+  /* ---- WKNC + tonight's sky ---- */
+  #skyBox { flex:0 0 auto; }
+  .wkncBar { background:linear-gradient(135deg,#2a1233,#141018); border:1px solid rgba(190,120,255,.3);
+    border-radius:16px; padding:12px 14px; margin-bottom:12px; }
+  .wkncTop { font-size:10px; font-weight:900; letter-spacing:.7px; color:#c9a6ff; }
+  .wkncSong { font-size:16px; font-weight:900; color:var(--ink); margin-top:4px; line-height:1.25; }
+  .wkncArt { font-size:13px; font-weight:700; color:#b6b6be; margin-top:1px; }
+  .wkncShow { font-size:12px; color:var(--ink-dim); margin-top:5px; }
+  .wkncLink { display:inline-block; margin-top:8px; font-size:12px; font-weight:800;
+    color:#c9a6ff; text-decoration:none; }
+  .skyCard { background:var(--surface); border:1px solid rgba(255,255,255,.07);
+    border-radius:16px; padding:6px 12px 10px; margin-bottom:12px; }
+  .skyRow { display:flex; gap:11px; align-items:flex-start; padding:9px 0;
+    border-bottom:1px solid rgba(255,255,255,.05); }
+  .skyRow:last-of-type { border-bottom:none; }
+  .skyIc { font-size:20px; flex:0 0 24px; text-align:center; }
+  .skyT { font-size:14px; font-weight:800; color:var(--ink); line-height:1.3; }
+  .skyS { font-size:12px; color:var(--ink-dim); margin-top:2px; line-height:1.35; }
+  .skyRow.hot .skyT { color:#ffd60a; }
+  .skyCloud { font-size:11px; font-weight:700; color:var(--ink-dim); padding-top:8px; }
 /* ==========================================================================
    WOLFPACK SPORTS — paste into the <style> block in index.html, right after
    the .gfBadge rules (same badge family, same dark palette).
@@ -683,6 +704,7 @@
 <!-- what's poppin (campus events) -->
 <div class="screen" id="screenEvents">
   <div class="scrTitle">what's poppin 🎉</div>
+  <div id="skyBox"></div>
   <div id="evPills">
     <button class="evPill on" data-when="today">today</button>
     <button class="evPill" data-when="week">this week</button>
@@ -1322,7 +1344,7 @@ function showScreen(name) {
   $('screenCompass').classList.toggle('on', name==='compass');
   $('screenEvents').classList.toggle('on', name==='events');
   if (name==='classes') renderDatesCard();
-  if (name==='events') renderEvents();
+  if (name==='events') { renderEvents(); renderSky(); }
   refreshNightBtn();
   if (name==='compass') {
     if (needsCompassPerm && !compassGranted) $('enableCompassBtn').classList.add('on');
@@ -1398,7 +1420,7 @@ async function fetchWx(){
   try{
     const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.785&longitude=-78.669'+
       '&current=temperature_2m,apparent_temperature,precipitation,weather_code,uv_index,is_day'+
-      '&hourly=temperature_2m,precipitation_probability,weather_code'+
+      '&hourly=temperature_2m,precipitation_probability,weather_code,cloud_cover'+
       '&minutely_15=precipitation_probability'+
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,sunrise,sunset,uv_index_max'+
       '&temperature_unit=fahrenheit&timezone=America%2FNew_York&forecast_days=1');
@@ -1669,6 +1691,153 @@ function drawEventMarkers(){
   });
   evLayer.addTo(map);
 }
+
+/* ================= WKNC 88.1 + TONIGHT'S SKY ================= */
+const skyEsc = s => String(s==null?'':s).replace(/[<>&"']/g, c =>
+  ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+const compass16 = a => ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(((a%360)+360)%360/22.5)%16];
+
+/* ---- WKNC: her own school's student radio ---- */
+var WKNC=null; let wkncAt=0;
+async function fetchWknc(){
+  if(WKNC && Date.now()-wkncAt < 90*1000) return WKNC;
+  try{
+    const [np,shows]=await Promise.all([
+      fetch('https://wknc.org/wp-json/wknc/v1/now-playing?station=1').then(r=>r.json()).catch(()=>null),
+      fetch('https://wknc.org/wp-json/wknc/v1/shows?station=1').then(r=>r.json()).catch(()=>[])
+    ]);
+    /* their on_air flag is unreliable — work out the current slot ourselves.
+       day: 1=Mon..7=Sun, hour: local hour the slot starts */
+    const now=new Date(), d=((now.getDay()+6)%7)+1, h=now.getHours();
+    const show=(shows||[]).find(s=>s.day===d && h>=s.hour && h < s.hour+(s.duration||1));
+    WKNC={ np, show }; wkncAt=Date.now();
+  }catch(e){}
+  return WKNC;
+}
+function wkncHtml(){
+  if(!WKNC||!WKNC.np||!WKNC.np.song) return '';
+  const s=WKNC.np, sh=WKNC.show;
+  const djs=sh&&sh.personas&&sh.personas.length?sh.personas.map(p=>skyEsc(p.name)).join(' & '):'';
+  return `<div class="wkncBar"><div class="wkncTop">🎧 ON WKNC 88.1 RIGHT NOW</div>`+
+    `<div class="wkncSong">${skyEsc(s.song)}</div>`+
+    `<div class="wkncArt">${skyEsc(s.artist)}</div>`+
+    (sh?`<div class="wkncShow">${skyEsc(sh.title)}${djs?' · '+djs:''}</div>`:'')+
+    `<a class="wkncLink" href="https://wknc.org/listen/" target="_blank" rel="noopener">listen live 📻</a></div>`;
+}
+
+/* ---- the sky: eclipse, meteors, birds, planets ---- */
+const ECLIPSES=[
+  { start:'2026-08-27T22:33:00', max:'2026-08-28T00:13:00', end:'2026-08-28T01:52:00',
+    what:'DEEP PARTIAL LUNAR ECLIPSE 🌘', note:'96% of the moon goes dark red — Raleigh has one of the best views on earth' }
+];
+const SHOWERS=[
+  { d:'2026-10-08', n:'Draconids',    zhr:'varies', moon:'4% — dark sky' },
+  { d:'2026-10-21', n:'Orionids',     zhr:'20/hr',  moon:'78% — washed out' },
+  { d:'2026-11-05', n:'S. Taurids',   zhr:'5/hr',   moon:'13% — fireball season 🔥' },
+  { d:'2026-11-12', n:'N. Taurids',   zhr:'5/hr',   moon:'11% — fireball season 🔥' },
+  { d:'2026-11-17', n:'Leonids',      zhr:'15/hr',  moon:'52%' },
+  { d:'2026-12-14', n:'GEMINIDS ⭐',   zhr:'150/hr', moon:'26% — best night of the year' },
+  { d:'2027-01-03', n:'Quadrantids',  zhr:'120/hr', moon:'15% — short sharp peak' },
+];
+var BIRDS=null; let birdAt=0;
+async function fetchBirds(){
+  if(BIRDS && Date.now()-birdAt < 10*60*1000) return BIRDS;
+  try{
+    const B='https://is-birdcast-observed-prod.s3.us-east-1.amazonaws.com/';
+    const u=new Date(), p=`dashboard/${u.getUTCFullYear()}/${String(u.getUTCMonth()+1).padStart(2,'0')}/${String(u.getUTCDate()).padStart(2,'0')}/`;
+    let xml=await fetch(B+'?list-type=2&prefix='+encodeURIComponent(p)+'&max-keys=400').then(r=>r.text());
+    let keys=(xml.match(/<Key>[^<]+<\/Key>/g)||[]).map(k=>k.slice(5,-6));
+    if(!keys.length){                                   /* just past UTC midnight — fall back a day */
+      const y=new Date(Date.now()-864e5);
+      const p2=`dashboard/${y.getUTCFullYear()}/${String(y.getUTCMonth()+1).padStart(2,'0')}/${String(y.getUTCDate()).padStart(2,'0')}/`;
+      xml=await fetch(B+'?list-type=2&prefix='+encodeURIComponent(p2)+'&max-keys=400').then(r=>r.text());
+      keys=(xml.match(/<Key>[^<]+<\/Key>/g)||[]).map(k=>k.slice(5,-6));
+    }
+    if(!keys.length) return BIRDS;
+    const res=await fetch(B+keys[keys.length-1]);
+    const ds=new DecompressionStream('gzip');
+    const txt=await new Response(res.body.pipeThrough(ds)).text();
+    const lines=txt.trim().split('\n');
+    const hdr=lines[0].split(',').map(s=>s.trim());
+    const row=lines.filter(l=>l.indexOf('US-NC-183')===0).pop();
+    if(!row) return BIRDS;
+    const c=row.split(','), o={}; hdr.forEach((h,i)=>o[h]=c[i]);
+    BIRDS={ aloft:Math.round(+o.birds_aloft||0), height:Math.round(+o.height_mean||0),
+            dir:Math.round(+o.dd||0), night:o.part_of_day==='N', on:String(o.enabled).toUpperCase()==='TRUE' };
+    birdAt=Date.now();
+  }catch(e){}
+  return BIRDS;
+}
+var PLANETS=null; let planetAt=0;
+async function fetchPlanets(){
+  if(PLANETS && Date.now()-planetAt < 20*60*1000) return PLANETS;
+  try{
+    const j=await fetch('https://api.visibleplanets.dev/v3?latitude=35.785&longitude=-78.669&aboveHorizon=true').then(r=>r.json());
+    PLANETS=(j.data||[]).filter(p=>p.nakedEyeObject && p.name!=='Moon' && p.altitude>8);
+    planetAt=Date.now();
+  }catch(e){}
+  return PLANETS;
+}
+function daysUntil(iso){
+  const t=new Date(iso), n=new Date();
+  return Math.ceil((t.setHours(0,0,0,0)-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);
+}
+function skyRow(icon,title,sub,hot){
+  return `<div class="skyRow${hot?' hot':''}"><div class="skyIc">${icon}</div><div><div class="skyT">${title}</div><div class="skyS">${sub}</div></div></div>`;
+}
+function skyHtml(){
+  const rows=[]; const now=new Date();
+  /* 1. eclipse — the headline when it's close */
+  ECLIPSES.forEach(e=>{
+    const st=new Date(e.start), en=new Date(e.end);
+    const d=daysUntil(e.start);
+    if(now>en || d>21) return;
+    const when = now>=st&&now<=en ? 'HAPPENING RIGHT NOW — GO OUTSIDE'
+      : d===0 ? `tonight ${fmt12(st.getHours()*60+st.getMinutes())} → ${fmt12(en.getHours()*60+en.getMinutes())}`
+      : d===1 ? 'TOMORROW NIGHT' : `in ${d} days`;
+    rows.push(skyRow('🌘', e.what+' · '+when, e.note, true));
+  });
+  /* 2. meteor shower within 3 days */
+  SHOWERS.forEach(s=>{
+    const d=daysUntil(s.d+'T22:00:00');
+    if(d<0||d>3) return;
+    rows.push(skyRow('🌠', `${s.n} peak ${d===0?'TONIGHT':d===1?'tomorrow':'in '+d+' days'}`, `${s.zhr} · moon ${s.moon}`, d===0));
+  });
+  /* 3. birds overhead (only meaningful after dark, in season) */
+  if(BIRDS && BIRDS.on && BIRDS.aloft>500)
+    rows.push(skyRow('🐦', BIRDS.aloft.toLocaleString()+' birds flying over Raleigh rn',
+      `${BIRDS.height}m up, heading ${compass16(BIRDS.dir)} · migration season`, BIRDS.aloft>50000));
+  /* 4. brightest naked-eye planet up right now */
+  if(PLANETS && PLANETS.length){
+    const p=PLANETS.slice().sort((a,b)=>a.magnitude-b.magnitude)[0];
+    rows.push(skyRow('✨', `${skyEsc(p.name)} is up right now`,
+      `look ${compass16(p.azimuth)}, ${Math.round(p.altitude)}° above the horizon${p.magnitude<-3?" — it's the brightest thing up there":''}`));
+  }
+  /* 5. sunset / golden hour from the weather we already have */
+  if(typeof WX!=='undefined' && WX && WX.daily && WX.daily.sunset){
+    const ss=sunsetMin();
+    if(ss!==null){
+      const m=now.getHours()*60+now.getMinutes();
+      if(m < ss) rows.push(skyRow('🌇','golden hour before sunset', `sunset ${fmt12(ss)} — best light ~${fmt12(ss-35)}`));
+    }
+  }
+  if(!rows.length) return '';
+  /* cloud gate — never tell her to look up at a solid grey sky */
+  let cloud='';
+  if(typeof WX!=='undefined' && WX && WX.hourly && WX.hourly.cloud_cover){
+    const h=Math.min(23,now.getHours());
+    const cc=WX.hourly.cloud_cover[h];
+    if(cc!=null) cloud=`<div class="skyCloud">${cc>70?`☁️ ${cc}% cloud cover rn — might not see much`:cc>35?`🌤️ ${cc}% clouds — patchy`:`✨ only ${cc}% clouds — clear skies`}</div>`;
+  }
+  return `<div class="secLbl">tonight's sky 🌙</div><div class="skyCard">${rows.join('')}${cloud}</div>`;
+}
+async function renderSky(){
+  const el=$('skyBox'); if(!el) return;
+  el.innerHTML=wkncHtml()+skyHtml();
+  await Promise.all([fetchWknc(),fetchPlanets(),fetchBirds()]);
+  el.innerHTML=wkncHtml()+skyHtml();
+}
+
 document.querySelectorAll('.evPill').forEach(p=>{
   p.onclick=()=>{ evWhen=p.dataset.when;
     document.querySelectorAll('.evPill').forEach(q=>q.classList.toggle('on',q===p));
